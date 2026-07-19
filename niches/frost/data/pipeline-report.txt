@@ -1,0 +1,97 @@
+FrostCal Phase 1 pipeline report
+Generated: 2026-07-17T20:14:22.978Z
+
+=== Source data ===
+NOAA annual/seasonal by-station CSVs: 15616 files scanned
+  usable stations (has 32F/P50 columns): 7305
+  of which valid frost data: 6949
+  of which frost-free (sentinel -9999, e.g. HI/southern FL): 356
+  discarded (missing 32F/P50 values or no such columns): 8311
+NOAA monthly by-station CSVs: monthly TMIN/TAVG/TMAX found for 7305 of 7305 stations
+GeoNames candidate populated places (feature class P, population>0): 31720
+
+=== City selection + join ===
+Cities selected from GeoNames (top ~5000, topped up so every state has >= 20): 5079
+Cities matched to a valid station: 5078
+Cities dropped (no station within 80km / 400m elevation delta): 1
+Frost-free cities in final output: 301
+
+=== Distance distribution (matched cities, km to station) ===
+  min=0.0 p25=3.5 median=6.4 p75=10.7 p90=15.1 max=79.0
+  0-10km: 3637 (71.6%)
+  10-30km: 1432 (28.2%)
+  30-50km: 6 (0.1%)
+  50-80km: 3 (0.1%)
+
+=== Per-state city counts ===
+  AK: 20
+  AL: 72
+  AR: 43
+  AZ: 79
+  CA: 565
+  CO: 68
+  CT: 86
+  DC: 38
+  DE: 20
+  FL: 353
+  GA: 113
+  HI: 69
+  IA: 45
+  ID: 24
+  IL: 285
+  IN: 88
+  KS: 40
+  KY: 53
+  LA: 67
+  MA: 189
+  MD: 156
+  ME: 21
+  MI: 120
+  MN: 104
+  MO: 91
+  MS: 45
+  MT: 20
+  NC: 96
+  ND: 20
+  NE: 20
+  NH: 24
+  NJ: 223
+  NM: 27
+  NV: 22
+  NY: 344
+  OH: 203
+  OK: 48
+  OR: 69
+  PA: 182
+  RI: 29
+  SC: 58
+  SD: 20
+  TN: 71
+  TX: 268
+  UT: 69
+  VA: 118
+  VT: 20
+  WA: 137
+  WI: 96
+  WV: 20
+  WY: 20
+  All states have >= 20 cities.
+
+=== Spot checks (10 known cities) ===
+  [PASS] Chicago, IL -- expected last spring frost ~Mar 25-May 10; actual: Apr 10 (station USC00111550, 3.4km)
+  [PASS] Miami, FL -- expected frost-free; actual: frostFree
+  [PASS] Denver, CO -- expected last spring frost ~Apr 15-May 20; actual: Apr 30 (station USC00052223, 2.3km)
+  [PASS] Phoenix, AZ -- expected rare/very early frost; actual: Jan 5 (station USW00023183, 6.9km)
+  [PASS] Seattle, WA -- expected last spring frost ~Feb 15-Apr 15; actual: Mar 13 (station USW00024234, 8.8km)
+  [PASS] New York City, NY -- expected last spring frost ~Mar 20-May 5; actual: Mar 30 (station USW00094728, 7.8km)
+  [PASS] Los Angeles, CA -- expected rare/very early frost; actual: frostFree
+  [PASS] Minneapolis, MN -- expected last spring frost ~Apr 1-May 20; actual: Apr 23 (station USC00214884, 1.3km)
+  [PASS] Atlanta, GA -- expected last spring frost ~Mar 1-Apr 15; actual: Mar 24 (station USW00003888, 12.8km)
+  [PASS] Anchorage, AK -- expected last spring frost ~Apr 15-Jun 10; actual: May 1 (station USW00026409, 2.4km)
+
+Overall spot-check result: ALL PASS
+
+=== Acceptance criteria ===
+  >= 4500 cities matched: PASS (5078)
+  Spot checks pass: PASS
+  Report written: PASS (this file)

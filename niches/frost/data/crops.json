@@ -1,0 +1,469 @@
+[
+  {
+    "name": "Tomato",
+    "slug": "tomato",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-8, -6],
+    "transplantOffsetWeeks": [1, 2],
+    "daysToMaturity": [60, 85],
+    "notes": "Start indoors 6-8 weeks before last frost; transplant out 1-2 weeks after last frost once soil has warmed."
+  },
+  {
+    "name": "Pepper",
+    "slug": "pepper",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-10, -8],
+    "transplantOffsetWeeks": [1, 3],
+    "daysToMaturity": [60, 90],
+    "notes": "Slow to germinate; start indoors 8-10 weeks before last frost. Transplant only once nights stay above 55F, 1-3 weeks after last frost."
+  },
+  {
+    "name": "Eggplant",
+    "slug": "eggplant",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-10, -8],
+    "transplantOffsetWeeks": [2, 3],
+    "daysToMaturity": [65, 85],
+    "notes": "Warm-season crop, similar timing to pepper; needs consistently warm soil (65F+) to transplant."
+  },
+  {
+    "name": "Cucumber",
+    "slug": "cucumber",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-4, -3],
+    "transplantOffsetWeeks": [1, 2],
+    "directSowOffsetWeeks": [1, 2],
+    "daysToMaturity": [50, 65],
+    "notes": "Can be started indoors 3-4 weeks before transplanting, or direct-sown 1-2 weeks after last frost once soil is warm."
+  },
+  {
+    "name": "Zucchini",
+    "slug": "zucchini",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [1, 3],
+    "seedStartOffsetWeeks": [-3, -2],
+    "transplantOffsetWeeks": [1, 2],
+    "daysToMaturity": [45, 55],
+    "notes": "Fast-growing squash; direct sow 1-3 weeks after last frost, or start indoors 2-3 weeks early for a head start."
+  },
+  {
+    "name": "Winter Squash",
+    "slug": "winter-squash",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [1, 3],
+    "seedStartOffsetWeeks": [-4, -3],
+    "transplantOffsetWeeks": [1, 2],
+    "daysToMaturity": [80, 110],
+    "notes": "Long season; direct sow after soil warms, or start indoors 3-4 weeks before last frost in short-season climates."
+  },
+  {
+    "name": "Pumpkin",
+    "slug": "pumpkin",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [1, 3],
+    "daysToMaturity": [90, 120],
+    "notes": "Direct sow 1-3 weeks after last frost; back-time from your first fall frost so the 90-120 day maturity window lands before it."
+  },
+  {
+    "name": "Watermelon",
+    "slug": "watermelon",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-4, -3],
+    "transplantOffsetWeeks": [2, 3],
+    "daysToMaturity": [70, 90],
+    "notes": "Needs warm soil (65F+); start indoors 3-4 weeks before last frost, transplant 2-3 weeks after last frost."
+  },
+  {
+    "name": "Cantaloupe",
+    "slug": "cantaloupe",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-4, -3],
+    "transplantOffsetWeeks": [2, 3],
+    "daysToMaturity": [70, 90],
+    "notes": "Same warm-soil requirements as watermelon; avoid disturbing roots when transplanting."
+  },
+  {
+    "name": "Corn",
+    "slug": "corn",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [0, 2],
+    "daysToMaturity": [60, 100],
+    "notes": "Direct sow at last frost to 2 weeks after, once soil reaches 60F; does not transplant well. Succession sow every 2 weeks."
+  },
+  {
+    "name": "Green Bean",
+    "slug": "green-bean",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [0, 2],
+    "daysToMaturity": [50, 65],
+    "notes": "Direct sow at last frost to 2 weeks after, once soil has warmed; frost-tender, do not rush."
+  },
+  {
+    "name": "Pea",
+    "slug": "pea",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-6, -4],
+    "daysToMaturity": [55, 70],
+    "notes": "Cold-hardy; direct sow 4-6 weeks before last frost as soon as soil can be worked."
+  },
+  {
+    "name": "Lettuce",
+    "slug": "lettuce",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-4, -2],
+    "daysToMaturity": [45, 60],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-8, -6],
+      "notes": "Second sowing for fall harvest 6-8 weeks before first fall frost; cold-tolerant, survives light frost."
+    },
+    "notes": "Cold-hardy; direct sow 2-4 weeks before last frost. Also transplantable from indoor starts."
+  },
+  {
+    "name": "Spinach",
+    "slug": "spinach",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-6, -4],
+    "daysToMaturity": [40, 50],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-8, -6],
+      "notes": "Fall/overwintering sowing 6-8 weeks before first fall frost; very cold-hardy, tolerates hard frost."
+    },
+    "notes": "Very cold-hardy; direct sow 4-6 weeks before last frost as soon as soil can be worked."
+  },
+  {
+    "name": "Kale",
+    "slug": "kale",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-4, -2],
+    "daysToMaturity": [50, 65],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-10, -8],
+      "notes": "Fall crop sown 8-10 weeks before first fall frost; flavor improves after light frost."
+    },
+    "notes": "Cold-hardy; direct sow 2-4 weeks before last frost or start indoors for earlier transplants."
+  },
+  {
+    "name": "Arugula",
+    "slug": "arugula",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-4, -2],
+    "daysToMaturity": [30, 40],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-6, -5],
+      "notes": "Fast fall crop; sow 5-6 weeks before first fall frost."
+    },
+    "notes": "Fast-growing, cold-tolerant green; direct sow 2-4 weeks before last frost, succession sow every 2-3 weeks."
+  },
+  {
+    "name": "Swiss Chard",
+    "slug": "swiss-chard",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-3, -1],
+    "daysToMaturity": [50, 60],
+    "notes": "Fairly cold-hardy; direct sow 1-3 weeks before last frost. Tolerates light frost in fall too."
+  },
+  {
+    "name": "Broccoli",
+    "slug": "broccoli",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-7, -5],
+    "transplantOffsetWeeks": [-3, -2],
+    "daysToMaturity": [55, 80],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-9, -8],
+      "notes": "Fall crop: transplant 8-9 weeks before first fall frost (start seeds ~4 weeks before that)."
+    },
+    "notes": "Start indoors 5-7 weeks before last frost; transplant out 2-3 weeks before last frost (hardens off to light frost)."
+  },
+  {
+    "name": "Cauliflower",
+    "slug": "cauliflower",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-7, -5],
+    "transplantOffsetWeeks": [-2, -1],
+    "daysToMaturity": [55, 85],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-10, -9],
+      "notes": "Fall crop is often more reliable than spring; transplant 9-10 weeks before first fall frost."
+    },
+    "notes": "Fussier than broccoli about temperature swings; start indoors 5-7 weeks before last frost, transplant 1-2 weeks before last frost."
+  },
+  {
+    "name": "Cabbage",
+    "slug": "cabbage",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-7, -5],
+    "transplantOffsetWeeks": [-4, -2],
+    "daysToMaturity": [60, 100],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-10, -8],
+      "notes": "Fall crop transplanted 8-10 weeks before first fall frost, matures in cool weather."
+    },
+    "notes": "Cold-hardy; start indoors 5-7 weeks before last frost, transplant 2-4 weeks before last frost."
+  },
+  {
+    "name": "Brussels Sprouts",
+    "slug": "brussels-sprouts",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-7, -5],
+    "transplantOffsetWeeks": [-3, -1],
+    "daysToMaturity": [90, 110],
+    "notes": "Long-season crop best timed to mature after a light fall frost for sweetest flavor; start indoors 5-7 weeks before last frost."
+  },
+  {
+    "name": "Carrot",
+    "slug": "carrot",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-4, -2],
+    "daysToMaturity": [60, 80],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-12, -10],
+      "notes": "Fall sowing 10-12 weeks before first fall frost; sweetens after light frost."
+    },
+    "notes": "Direct sow only (does not transplant); sow 2-4 weeks before last frost, as soon as soil can be worked."
+  },
+  {
+    "name": "Beet",
+    "slug": "beet",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-4, -2],
+    "daysToMaturity": [50, 65],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-10, -8],
+      "notes": "Fall sowing 8-10 weeks before first fall frost."
+    },
+    "notes": "Direct sow 2-4 weeks before last frost; tolerates light frost."
+  },
+  {
+    "name": "Radish",
+    "slug": "radish",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-5, -3],
+    "daysToMaturity": [22, 30],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-6, -4],
+      "notes": "Fast fall crop; sow 4-6 weeks before first fall frost, can succession sow right up to first frost."
+    },
+    "notes": "Very fast and cold-hardy; direct sow 3-5 weeks before last frost, as soon as soil can be worked."
+  },
+  {
+    "name": "Turnip",
+    "slug": "turnip",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-4, -2],
+    "daysToMaturity": [40, 60],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-10, -8],
+      "notes": "Fall crop (often preferred) sown 8-10 weeks before first fall frost."
+    },
+    "notes": "Cold-hardy; direct sow 2-4 weeks before last frost."
+  },
+  {
+    "name": "Onion",
+    "slug": "onion",
+    "category": "vegetable",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-10, -8],
+    "transplantOffsetWeeks": [-4, -2],
+    "daysToMaturity": [90, 120],
+    "notes": "Start seeds indoors 8-10 weeks before last frost (or use sets/transplants); set out 2-4 weeks before last frost, very cold-tolerant as seedlings."
+  },
+  {
+    "name": "Garlic",
+    "slug": "garlic",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "daysToMaturity": [240, 270],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-4, -2],
+      "notes": "Plant cloves 2-4 weeks before first fall frost so roots establish before ground freezes; harvest the following summer."
+    },
+    "notes": "Fall-planted crop only; not planted in spring in most climates."
+  },
+  {
+    "name": "Potato",
+    "slug": "potato",
+    "category": "vegetable",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-4, -2],
+    "daysToMaturity": [70, 120],
+    "notes": "Plant seed potatoes 2-4 weeks before last frost, as soon as soil can be worked and is above 45F; light frost on emerging foliage is usually tolerated."
+  },
+  {
+    "name": "Sweet Potato",
+    "slug": "sweet-potato",
+    "category": "vegetable",
+    "method": "transplant",
+    "transplantOffsetWeeks": [2, 4],
+    "daysToMaturity": [90, 120],
+    "notes": "Set out slips 2-4 weeks after last frost once soil is thoroughly warm (65F+); very frost/cold sensitive."
+  },
+  {
+    "name": "Asparagus",
+    "slug": "asparagus",
+    "category": "vegetable",
+    "method": "transplant",
+    "transplantOffsetWeeks": [-4, -2],
+    "daysToMaturity": [730, 1095],
+    "notes": "Perennial; plant crowns 2-4 weeks before last frost as soon as soil can be worked. Takes 2-3 years to full production."
+  },
+  {
+    "name": "Basil",
+    "slug": "basil",
+    "category": "herb",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-6, -5],
+    "transplantOffsetWeeks": [1, 2],
+    "daysToMaturity": [50, 70],
+    "notes": "Very frost/cold sensitive; start indoors 5-6 weeks before last frost, transplant only after all danger of frost (1-2 weeks after) and nights stay warm."
+  },
+  {
+    "name": "Cilantro",
+    "slug": "cilantro",
+    "category": "herb",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-3, -1],
+    "daysToMaturity": [45, 70],
+    "fallPlanting": {
+      "relativeTo": "firstFrost",
+      "offsetWeeks": [-8, -6],
+      "notes": "Cool-season herb; good fall sowing 6-8 weeks before first fall frost, bolts less in cool weather."
+    },
+    "notes": "Cool-season, bolts in heat; direct sow 1-3 weeks before last frost, succession sow through spring."
+  },
+  {
+    "name": "Parsley",
+    "slug": "parsley",
+    "category": "herb",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-8, -6],
+    "transplantOffsetWeeks": [-2, -1],
+    "daysToMaturity": [70, 90],
+    "notes": "Slow to germinate; start indoors 6-8 weeks before last frost, transplant 1-2 weeks before last frost (biennial, cold-tolerant)."
+  },
+  {
+    "name": "Dill",
+    "slug": "dill",
+    "category": "herb",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [-3, -1],
+    "daysToMaturity": [40, 60],
+    "notes": "Taprooted, does not transplant well; direct sow 1-3 weeks before last frost, succession sow through summer."
+  },
+  {
+    "name": "Oregano",
+    "slug": "oregano",
+    "category": "herb",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-8, -6],
+    "transplantOffsetWeeks": [0, 1],
+    "daysToMaturity": [80, 90],
+    "notes": "Perennial herb; start indoors 6-8 weeks before last frost, transplant around/just after last frost date."
+  },
+  {
+    "name": "Thyme",
+    "slug": "thyme",
+    "category": "herb",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-8, -6],
+    "transplantOffsetWeeks": [0, 1],
+    "daysToMaturity": [85, 95],
+    "notes": "Perennial herb, slow from seed; start indoors 6-8 weeks before last frost, transplant around/after last frost."
+  },
+  {
+    "name": "Sunflower",
+    "slug": "sunflower",
+    "category": "flower",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [1, 3],
+    "daysToMaturity": [70, 100],
+    "notes": "Direct sow 1-3 weeks after last frost once soil has warmed; taprooted, resents transplanting."
+  },
+  {
+    "name": "Zinnia",
+    "slug": "zinnia",
+    "category": "flower",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [1, 3],
+    "seedStartOffsetWeeks": [-4, -3],
+    "transplantOffsetWeeks": [1, 2],
+    "daysToMaturity": [60, 70],
+    "notes": "Frost-tender; direct sow 1-3 weeks after last frost, or start indoors 3-4 weeks early for earlier blooms."
+  },
+  {
+    "name": "Marigold",
+    "slug": "marigold",
+    "category": "flower",
+    "method": "indoor-start",
+    "seedStartOffsetWeeks": [-6, -4],
+    "transplantOffsetWeeks": [1, 2],
+    "daysToMaturity": [45, 60],
+    "notes": "Frost-tender; start indoors 4-6 weeks before last frost, transplant after all frost danger has passed."
+  },
+  {
+    "name": "Cosmos",
+    "slug": "cosmos",
+    "category": "flower",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [1, 3],
+    "seedStartOffsetWeeks": [-4, -3],
+    "transplantOffsetWeeks": [1, 2],
+    "daysToMaturity": [60, 90],
+    "notes": "Easy from direct seed 1-3 weeks after last frost; can also start indoors 3-4 weeks early."
+  },
+  {
+    "name": "Nasturtium",
+    "slug": "nasturtium",
+    "category": "flower",
+    "method": "direct-sow",
+    "directSowOffsetWeeks": [1, 3],
+    "daysToMaturity": [50, 65],
+    "notes": "Frost-tender, resents root disturbance; direct sow 1-3 weeks after last frost once soil has warmed."
+  },
+  {
+    "name": "Dahlia",
+    "slug": "dahlia",
+    "category": "flower",
+    "method": "transplant",
+    "transplantOffsetWeeks": [1, 3],
+    "daysToMaturity": [90, 120],
+    "notes": "Plant tubers 1-3 weeks after last frost once soil is warm (60F+); very frost-sensitive."
+  }
+]

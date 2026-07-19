@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Methodology: How FrostCal Calculates Frost Dates</title>
+<meta name="description" content="How FrostCal turns NOAA climate normals into frost date probabilities, station-to-city matching, and planting calendar offsets.">
+<link rel="canonical" href="https://twoface2316.github.io/evergreen-engine/methodology/">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="/evergreen-engine/style.css">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Methodology: How FrostCal Calculates Frost Dates">
+<meta property="og:description" content="How FrostCal turns NOAA climate normals into frost date probabilities, station-to-city matching, and planting calendar offsets.">
+<meta name="twitter:card" content="summary">
+
+</head>
+<body>
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="/evergreen-engine/">Frost<span>Cal</span></a>
+  </div>
+</header>
+<main class="wrap">
+<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/evergreen-engine/">Home</a> &rsaquo; Methodology</nav>
+<h1>Methodology</h1>
+<p class="lede">How FrostCal turns raw NOAA climate data into the frost dates and planting calendar on each city page.</p>
+
+<div class="methodology">
+
+<h2>Where the frost dates come from</h2>
+<p>Frost and freeze dates on this site are calculated from NOAA's <a href="https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals" rel="noopener">1991&ndash;2020 U.S. Climate Normals</a>, a 30-year statistical baseline published by the National Centers for Environmental Information (NCEI). For each weather station, NOAA computes the probability, in any given year, that the last spring freeze or first fall freeze at 32&deg;F falls on or before a given calendar day.</p>
+
+<h2>What P10 / P50 / P90 mean</h2>
+<dl>
+  <dt>P50 (typical)</dt>
+  <dd>The median date &mdash; in half of the 30 years in the record, the frost happened on or before this date, and in half it happened after. This is the single best "typical" estimate and is what's shown as the headline date on each city page.</dd>
+  <dt>P10 (safe)</dt>
+  <dd>For last spring frost, this is the later, more conservative date: historically, only 10% of years had a later last frost. Waiting until this date to plant tender crops is the cautious choice. For first fall frost, P10 is the later date too, meaning only a 10% chance frost arrives that late &mdash; treat it as an optimistic end-of-season estimate, not a safe one.</dd>
+  <dt>P90 (risky)</dt>
+  <dd>The earlier, higher-risk date: for last spring frost, 90% of years had a later frost, so planting before this date carries real frost risk. For first fall frost, P90 is the earlier date at which frost has already occurred in 90% of years &mdash; a cautious "frost could come this early" marker.</dd>
+</dl>
+<p>These are probabilities from historical data, not predictions for any specific year. Always check a real-time local forecast before planting tender crops or protecting plants in the field.</p>
+
+<h2>Matching cities to weather stations</h2>
+<p>City coordinates come from GeoNames; each city is matched to the nearest NOAA station that has valid 32&deg;F frost-probability data. A match is rejected &mdash; and the next-nearest station tried instead &mdash; if the station is more than <strong>80 km</strong> away or its elevation differs from the city's by more than <strong>400 meters</strong> (to avoid pairing a valley city with a mountain-top station, or vice versa). Across the 5,078 cities in the current dataset, the median station distance is <strong>6.4 km</strong>, and about 72% of cities are matched within 10 km.</p>
+<p>Each city page's summary box shows the exact station name and distance used, so you can judge how locally representative the data is for your address.</p>
+
+<h2>Frost-free classification</h2>
+<p>Some stations, mostly in Hawaii, southern Florida, and similar climates, recorded no measurable 32&deg;F freeze at all across the 1991&ndash;2020 normals period. Cities matched to these stations are labeled "frost-free," and their planting calendar switches to year-round guidance instead of frost-relative offsets.</p>
+
+<h2>Where the USDA hardiness zone comes from</h2>
+<p>The USDA Hardiness Zone shown on each city page is looked up from the USDA's <a href="https://planthardiness.ars.usda.gov/" rel="noopener">2023 Plant Hardiness Zone Map</a> (produced by the PRISM Climate Group at Oregon State University), matched to each city's nearest ZIP code by distance. A small number of cities don't have a nearby ZIP with published zone data and show as "Unavailable" rather than a guess.</p>
+
+<h2>Where the planting calendar comes from</h2>
+<p>Each crop's start-indoors, direct-sow, transplant, and fall-planting windows are expressed as offsets in weeks relative to a city's last spring frost (and, for fall crops, first fall frost). The offsets themselves are authored from general horticultural knowledge and are described in the UI as <em>based on university extension guidelines</em> &mdash; the same kind of week-relative-to-frost guidance published by state extension services (e.g. "start tomatoes indoors 6&ndash;8 weeks before last frost"). They are general guidance, not a substitute for advice from your local extension office, which can account for soil, cultivar, and microclimate specifics.</p>
+
+<h2>Limitations</h2>
+<p>A few things this data does <em>not</em> capture:</p>
+<ul>
+  <li><strong>Microclimates.</strong> Urban heat islands, low-lying frost pockets, coastal moderation, and sheltered or exposed yards can shift your actual frost dates earlier or later than the station-level normal.</li>
+  <li><strong>Elevation within a city.</strong> Large cities can span hundreds of feet of elevation change; a single station average won't capture every neighborhood.</li>
+  <li><strong>Station distance.</strong> Some cities, especially in rural areas, are matched to a station tens of kilometers away. Check the station distance shown on each city page.</li>
+  <li><strong>Climate change / recency.</strong> The 1991&ndash;2020 normals are already several years old and reflect the average of that 30-year window, not necessarily this year's conditions.</li>
+</ul>
+
+<h2>Data attribution</h2>
+<ul>
+  <li>Frost and temperature normals: <a href="https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals" rel="noopener">NOAA NCEI 1991&ndash;2020 U.S. Climate Normals</a>, U.S. public domain.</li>
+  <li>City and place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.</li>
+  <li>USDA Hardiness Zone: <a href="https://planthardiness.ars.usda.gov/" rel="noopener">USDA 2023 Plant Hardiness Zone Map</a> (PRISM Climate Group, Oregon State University), U.S. public domain government data.</li>
+</ul>
+
+</div>
+<footer class="site-footer">
+  <div class="disclaimer">This page is for general gardening reference only and is <strong>not agronomic, professional, or safety advice</strong>. Frost dates are statistical probabilities from historical climate normals, not guarantees — always check a local forecast before planting or protecting tender plants.</div>
+  <p>Frost and temperature normals: <a href="https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals" rel="noopener">NOAA NCEI 1991–2020 U.S. Climate Normals</a>.</p>
+  <p>City and place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.</p>
+  <p><a href="/evergreen-engine/methodology/">How these dates are calculated (methodology)</a></p>
+  <p>&copy; 2026 FrostCal.</p>
+</footer>
+</main>
+</body>
+</html>

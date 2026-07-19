@@ -1,0 +1,13 @@
+=== FrostCal Phase 5 zone lookup report ===
+Cities total: 5078
+ZIP coordinate source: frostline combined_zipcodes.csv (43447 ZIPs)
+ZIPs in cache after run: 6191
+Cities with resolved zone: 5077 (99.98%)
+Acceptance (>= 95%): PASS
+
+--- Sanity checks (2023 PHZM) ---
+Chicago, IL: zone=6b expected one of [6a, 6b] -> PASS
+Miami, FL: zone=11a expected one of [10b, 11a, 11b] -> PASS
+Denver, CO: zone=6a expected one of [5b, 6a] -> PASS
+Phoenix, AZ: zone=10a expected one of [9b, 10a, 10b] -> PASS
+Anchorage, AK: zone=5b expected one of [4a, 4b, 5a, 5b] -> PASS
