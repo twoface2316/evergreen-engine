@@ -4,7 +4,7 @@ Static programmatic-SEO site generator. One repo, many niches: shared build tool
 
 First niche: **frost** — frost dates & planting calendars for 5,078 US cities, built from NOAA 1991-2020 climate normals.
 
-Live: https://twoface2316.github.io/evergreen-engine/
+Live: https://frostcal.com/
 
 ## Structure
 
@@ -24,18 +24,17 @@ sites/frost/       Generated static site (committed, deployed by CI)
 node niches/frost/scripts/test-calendar.js        # unit tests
 node niches/frost/scripts/render.js sample        # 5 sample pages
 node niches/frost/scripts/render.js full          # full 5,078-page build
-node engine/check-links.js sites/frost --base-path=/evergreen-engine
+node engine/check-links.js sites/frost
 ```
 
-Production render (canonical URLs + subpath links):
+The frost niche serves from a domain root (`frostcal.com`), so no `BASE_PATH` is needed and `SITE_URL` defaults to the production origin in `niches/frost/config.js` — a plain `render.js full` produces a deployable build.
+
+Sub-path deploys (e.g. a GitHub Pages *project* page) still work via env vars, but must be run from PowerShell — Git Bash (MSYS) rewrites a leading-slash `BASE_PATH` into a local filesystem path:
 
 ```powershell
-$env:SITE_URL="https://twoface2316.github.io/evergreen-engine"
-$env:BASE_PATH="/evergreen-engine"
+$env:SITE_URL="https://user.github.io/repo"; $env:BASE_PATH="/repo"
 node niches/frost/scripts/render.js full
 ```
-
-Use PowerShell (or `cmd`) for the production render on Windows — Git Bash (MSYS) rewrites the leading-slash `BASE_PATH` into a local filesystem path.
 
 ## Deploy
 

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://twoface2316.github.io/evergreen-engine/sitemap.xml
+Sitemap: https://frostcal.com/sitemap.xml

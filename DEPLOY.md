@@ -1,42 +1,48 @@
 # Post-deploy checklist
 
-Live site: https://twoface2316.github.io/evergreen-engine/
+Live site: https://frostcal.com/ (domain purchased July 20, 2026)
 
-## 1. Google Search Console (do this first — indexing is the whole game)
+## 1. DNS setup (do this at your registrar — one time)
 
-1. https://search.google.com/search-console → Add property → URL prefix → `https://twoface2316.github.io/evergreen-engine/`
-2. Verify via HTML file: download the token file Google gives you, drop it in `sites/frost/`, commit + push (auto-redeploys), click Verify.
-3. Sitemaps → submit `https://twoface2316.github.io/evergreen-engine/sitemap.xml`.
-4. Expect slow initial crawl for a new site on a github.io subpath: weeks, not days. Check Coverage report weekly.
+The build already writes `sites/frost/CNAME` containing `frostcal.com` on every render, and GitHub Pages is configured for the custom domain. What remains is DNS.
 
-## 2. Custom domain (recommended before serious SEO investment)
+**Apex records** — create four A records for `frostcal.com` (host `@`), all pointing at GitHub Pages:
 
-A github.io subpath ranks worse and can't be moved without losing accumulated equity. Buy the domain early.
+```
+185.199.108.153
+185.199.109.153
+185.199.110.153
+185.199.111.153
+```
 
-**Candidate names** (check availability at registrar; prefer .com, fall back to .garden/.io only if the .com is parked at a silly price):
+Optionally add the IPv6 equivalents (AAAA, host `@`):
 
-1. `frostcal.com` — matches the existing site branding; zero rework
-2. `lastfrostdates.com` — exact-match for the highest-volume query
-3. `whentoplant.com` — broad, covers crop-timing queries beyond frost
-4. `frostdatefinder.com` — descriptive, tool-flavored
-5. `plantingcalendar.com` — likely taken/premium, but check; ideal if available
-6. `myfrostdates.com` — cheap fallback for #2
-7. `sowdates.com` — short, brandable, still descriptive
-8. `growingseasons.com` — broadens to season-length content later
-9. `frostwise.com` — brandable, works if the site grows past pure dates
-10. `gardenfrostdates.com` — long but keyword-rich fallback
+```
+2606:50c0:8000::153
+2606:50c0:8001::153
+2606:50c0:8002::153
+2606:50c0:8003::153
+```
 
-If the pick isn't `frostcal.com`, update `siteName`/`siteTitle` in `niches/frost/config.js` before the domain re-render.
+**www subdomain** — one CNAME record: host `www` → value `twoface2316.github.io` (with trailing dot if your registrar requires it). GitHub redirects `www` to the apex automatically.
 
-1. Buy a domain (Cloudflare Registrar or Porkbun, ~$10/yr). Niche-relevant beats brandable here, e.g. frost/planting themed.
-2. GitHub repo → Settings → Pages → Custom domain → enter it; add the CNAME DNS record (`www` → `twoface2316.github.io`) plus apex ALIAS/A records per GitHub docs. Enforce HTTPS.
-3. Rerender with the new URL and push:
-   ```powershell
-   $env:SITE_URL="https://www.yourdomain.com"; Remove-Item Env:BASE_PATH -ErrorAction SilentlyContinue
-   node niches/frost/scripts/render.js full
-   ```
-   (Custom domain serves from root — no BASE_PATH needed.)
-4. Re-add the property in Search Console under the new domain and resubmit the sitemap.
+Delete any parking-page A records or "forwarding" the registrar added by default — they conflict.
+
+Propagation is usually minutes, occasionally a few hours. Check with `nslookup frostcal.com`.
+
+**After DNS resolves:** GitHub repo → Settings → Pages → tick **Enforce HTTPS**. The certificate is issued automatically once GitHub sees the DNS pointing at it; the checkbox stays greyed out until then. Don't skip it — HTTP-only hurts rankings and blocks AdSense.
+
+## 2. Google Search Console (redo on the new domain)
+
+The old `twoface2316.github.io/evergreen-engine/` property and its verification file are obsolete — subpath properties don't carry over.
+
+1. https://search.google.com/search-console → Add property → **Domain** (not URL prefix) → `frostcal.com`
+2. Verify via DNS TXT record — the Domain property type requires it, and it covers http/https and all subdomains at once. Add the TXT record Google shows you at your registrar, then click Verify.
+3. Sitemaps → submit `sitemap.xml` (full URL: `https://frostcal.com/sitemap.xml`). At a domain root this behaves normally — none of the subpath quirks apply.
+4. URL Inspection on `https://frostcal.com/` → Request Indexing, to kick off crawling of the link graph.
+5. The stale `google2a6f5e5d3842f02f.html` file in `sites/frost/` can be deleted whenever; it's harmless.
+
+Expect weeks, not days, for meaningful indexing of 5,000 pages.
 
 ## 3. Monetization timeline
 
@@ -69,12 +75,11 @@ Any push to `main` redeploys automatically (`.github/workflows/deploy-pages.yml`
 
 Typical loop:
 ```powershell
-$env:SITE_URL="https://twoface2316.github.io/evergreen-engine"; $env:BASE_PATH="/evergreen-engine"
 node niches/frost/scripts/render.js full
-node engine/check-links.js sites/frost --base-path=/evergreen-engine
+node engine/check-links.js sites/frost
 git add -A; git commit -m "..."; git push
 ```
-Use PowerShell for the render — Git Bash mangles `BASE_PATH`.
+`SITE_URL` and the CNAME both come from `niches/frost/config.js` now — no env vars needed for a production build.
 
 ## 6. Content freshness (SEO maintenance, ~quarterly)
 

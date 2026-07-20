@@ -447,6 +447,13 @@ function runFull() {
   fs.mkdirSync(siteDir, { recursive: true });
   fs.copyFileSync(path.join(templatesDir, 'style.css'), path.join(siteDir, 'style.css'));
 
+  // GitHub Pages reads CNAME from the deployed artifact root; without it a
+  // custom domain is dropped on the next deploy.
+  if (nicheConfig.customDomain) {
+    fs.writeFileSync(path.join(siteDir, 'CNAME'), `${nicheConfig.customDomain}\n`, 'utf8');
+    console.log(`  CNAME: ${nicheConfig.customDomain}`);
+  }
+
   // --- 1. City pages -----------------------------------------------------
   const { ok: cityOk, errors: cityErrors } = renderCollection(cities, {
     siteDir,

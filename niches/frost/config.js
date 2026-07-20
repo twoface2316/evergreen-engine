@@ -11,9 +11,11 @@
 module.exports = {
   siteName: 'FrostCal',
   siteTitle: 'FrostCal — Frost Dates & Planting Calendars for US Cities',
-  // Local-dev fallback; production sets SITE_URL to the real deployed
-  // origin (+ sub-path), e.g. https://user.github.io/evergreen-engine.
-  defaultSiteUrl: 'https://frostcal.example',
+  // Production origin. Served from the domain root, so no BASE_PATH.
+  defaultSiteUrl: 'https://frostcal.com',
+  // Written to the site root on every full render so GitHub Pages keeps
+  // the custom domain across deploys.
+  customDomain: 'frostcal.com',
   // Shown on /contact/ and referenced in the privacy policy. Swap for a
   // site-specific alias before heavy promotion if desired.
   contactEmail: 'twoface692@gmail.com'
