@@ -13,5 +13,8 @@ module.exports = {
   siteTitle: 'FrostCal — Frost Dates & Planting Calendars for US Cities',
   // Local-dev fallback; production sets SITE_URL to the real deployed
   // origin (+ sub-path), e.g. https://user.github.io/evergreen-engine.
-  defaultSiteUrl: 'https://frostcal.example'
+  defaultSiteUrl: 'https://frostcal.example',
+  // Shown on /contact/ and referenced in the privacy policy. Swap for a
+  // site-specific alias before heavy promotion if desired.
+  contactEmail: 'Andrew@apicella5.com'
 };

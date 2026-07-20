@@ -270,6 +270,44 @@ ${layout.buildMethodologyBody()}`;
   });
 }
 
+function renderPrivacyPage() {
+  const title = 'Privacy Policy — FrostCal';
+  const description = 'FrostCal privacy policy: a static reference site with no accounts or first-party tracking; hosting, analytics, and advertising disclosures.';
+  const canonical = `${SITE_URL}/privacy/`;
+
+  const bodyHtml = `${layout.buildGenericBreadcrumbs([{ label: 'Home', href: '/' }, { label: 'Privacy Policy' }])}
+${layout.buildPrivacyBody(nicheConfig.contactEmail)}`;
+
+  return buildPageShell({
+    title,
+    description,
+    canonical,
+    stylesheetHref: basePathLib.href('/style.css'),
+    headerHtml: layout.buildSiteHeader(),
+    bodyHtml,
+    footerHtml: layout.buildFooter()
+  });
+}
+
+function renderContactPage() {
+  const title = 'Contact — FrostCal';
+  const description = 'Contact FrostCal with questions, corrections, or feedback about frost dates and planting calendars.';
+  const canonical = `${SITE_URL}/contact/`;
+
+  const bodyHtml = `${layout.buildGenericBreadcrumbs([{ label: 'Home', href: '/' }, { label: 'Contact' }])}
+${layout.buildContactBody(nicheConfig.contactEmail)}`;
+
+  return buildPageShell({
+    title,
+    description,
+    canonical,
+    stylesheetHref: basePathLib.href('/style.css'),
+    headerHtml: layout.buildSiteHeader(),
+    bodyHtml,
+    footerHtml: layout.buildFooter()
+  });
+}
+
 function render404Page() {
   const title = 'Page Not Found — FrostCal';
   const description = 'The page you were looking for could not be found. Search FrostCal for frost dates and planting calendars by city.';
@@ -450,8 +488,15 @@ function runFull() {
   fs.writeFileSync(path.join(methodologyDir, 'index.html'), renderMethodologyPage(), 'utf8');
   console.log('  methodology page: written');
 
+  for (const [dir, renderFn] of [['privacy', renderPrivacyPage], ['contact', renderContactPage]]) {
+    const pageDir = path.join(siteDir, dir);
+    fs.mkdirSync(pageDir, { recursive: true });
+    fs.writeFileSync(path.join(pageDir, 'index.html'), renderFn(), 'utf8');
+    console.log(`  ${dir} page: written`);
+  }
+
   // --- 5. sitemap.xml, robots.txt, 404.html --------------------------------
-  const urls = ['/', '/methodology/'];
+  const urls = ['/', '/methodology/', '/privacy/', '/contact/'];
   for (const { stateSlug } of statesMeta) urls.push(`/${stateSlug}/`);
   for (const city of cities) urls.push(`/${city.stateSlug}/${city.slug}/`);
   fs.writeFileSync(path.join(siteDir, 'sitemap.xml'), buildSitemapXml(urls, SITE_URL), 'utf8');

@@ -477,7 +477,7 @@ function buildFooter() {
   <div class="disclaimer">This page is for general gardening reference only and is <strong>not agronomic, professional, or safety advice</strong>. Frost dates are statistical probabilities from historical climate normals, not guarantees — always check a local forecast before planting or protecting tender plants.</div>
   <p>Frost and temperature normals: <a href="https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals" rel="noopener">NOAA NCEI 1991–2020 U.S. Climate Normals</a>.</p>
   <p>City and place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.</p>
-  <p><a href="${escapeHtml(url('/methodology/'))}">How these dates are calculated (methodology)</a></p>
+  <p><a href="${escapeHtml(url('/methodology/'))}">How these dates are calculated (methodology)</a> &middot; <a href="${escapeHtml(url('/privacy/'))}">Privacy policy</a> &middot; <a href="${escapeHtml(url('/contact/'))}">Contact</a></p>
   <p>&copy; ${year} FrostCal.</p>
 </footer>`;
 }
@@ -741,6 +741,50 @@ function build404Body() {
 <p><a href="${escapeHtml(url('/'))}">Go to the homepage</a> or use the search box there to find a city's frost dates and planting calendar.</p>`;
 }
 
+/** Privacy policy page body (reuses .methodology prose styling). */
+function buildPrivacyBody(contactEmail) {
+  return `<div class="methodology">
+<h1>Privacy Policy</h1>
+<p class="lede">FrostCal is a static reference site. It has no user accounts, no forms, and does not itself set cookies or collect personal information.</p>
+
+<h2>What this site collects</h2>
+<p>Nothing directly. Every page is a pre-built static file; there is no login, comment system, newsletter, or tracking script operated by FrostCal.</p>
+
+<h2>Hosting</h2>
+<p>This site is served by GitHub Pages. Like most web hosts, GitHub may log basic technical information about visits (such as IP address and user agent) for security and operational purposes. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub's privacy statement</a> for details.</p>
+
+<h2>Analytics</h2>
+<p>If analytics are enabled, FrostCal uses a privacy-focused, cookie-free analytics service that records aggregate page-view counts only (no cross-site tracking, no advertising profiles, no personal identifiers stored by us).</p>
+
+<h2>Advertising</h2>
+<p>FrostCal may display third-party advertising (for example, Google AdSense) to keep the site free. Ad providers may use cookies or similar technologies to serve and measure ads, including personalized ads where permitted. You can learn about Google's use of advertising data and opt out of personalization at <a href="https://policies.google.com/technologies/ads" rel="noopener">policies.google.com/technologies/ads</a>. This section applies only if and when ads are actually shown on the site.</p>
+
+<h2>External links</h2>
+<p>Pages link to external resources (NOAA, GeoNames, retailers, and others). Their privacy practices are their own; this policy covers only FrostCal.</p>
+
+<h2>Contact</h2>
+<p>Questions about this policy: <a href="mailto:${escapeHtml(contactEmail)}">${escapeHtml(contactEmail)}</a> or see the <a href="${escapeHtml(url('/contact/'))}">contact page</a>.</p>
+
+<p><em>Last updated: July 20, 2026.</em></p>
+</div>`;
+}
+
+/** Contact page body. */
+function buildContactBody(contactEmail) {
+  return `<div class="methodology">
+<h1>Contact</h1>
+<p class="lede">Questions, corrections, or feedback about FrostCal's frost dates and planting calendars? Get in touch.</p>
+<p>Email: <a href="mailto:${escapeHtml(contactEmail)}">${escapeHtml(contactEmail)}</a></p>
+<p>Especially useful to hear about:</p>
+<ul>
+<li><strong>Data issues</strong> — a city whose frost dates look wrong for the area (include the city and what you'd expect; note that dates come from the nearest NOAA station, which can differ from a specific microclimate).</li>
+<li><strong>Missing cities</strong> — a US city you'd like added.</li>
+<li><strong>Corrections</strong> — planting-window guidance that conflicts with your local extension office's advice.</li>
+</ul>
+<p>FrostCal is an independent reference site and is not affiliated with NOAA or the USDA. See <a href="${escapeHtml(url('/methodology/'))}">the methodology page</a> for how the numbers are produced.</p>
+</div>`;
+}
+
 module.exports = {
   escapeHtml,
   parseMonthDay,
@@ -773,6 +817,8 @@ module.exports = {
   buildStatesAZList,
   buildSearchWidget,
   buildMethodologyBody,
+  buildPrivacyBody,
+  buildContactBody,
   build404Body,
   MONTH_NAMES,
   MONTH_ABBR
