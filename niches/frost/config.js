@@ -16,5 +16,5 @@ module.exports = {
   defaultSiteUrl: 'https://frostcal.example',
   // Shown on /contact/ and referenced in the privacy policy. Swap for a
   // site-specific alias before heavy promotion if desired.
-  contactEmail: 'Andrew@apicella5.com'
+  contactEmail: 'twoface692@gmail.com'
 };
