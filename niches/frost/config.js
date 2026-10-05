@@ -27,5 +27,5 @@ module.exports = {
   // AdSense publisher ID, e.g. 'pub-1234567890123456' (from AdSense ->
   // Account -> Account information). Adds the Auto ads tag to every page and
   // writes /ads.txt. null = no ads.
-  adsensePublisherId: null
+  adsensePublisherId: 'pub-8043947909143318'
 };
