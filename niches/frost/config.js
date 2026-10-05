@@ -23,7 +23,7 @@ module.exports = {
   // ---- Monetization / analytics: paste IDs here, push, done. ----
   // GoatCounter site code: the "frostcal" in https://frostcal.goatcounter.com.
   // null = no analytics script on the site.
-  goatcounterCode: null,
+  goatcounterCode: 'frostcal',
   // AdSense publisher ID, e.g. 'pub-1234567890123456' (from AdSense ->
   // Account -> Account information). Adds the Auto ads tag to every page and
   // writes /ads.txt. null = no ads.
