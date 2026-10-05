@@ -44,12 +44,13 @@ const { computeCalendar } = require('./calendar.js');
 const layout = require('../templates/layout.js');
 
 const basePathLib = require('../../../engine/lib/base-path.js');
-const { buildPageShell } = require('../../../engine/lib/page-shell.js');
+const { buildPageShell, setShellDefaults } = require('../../../engine/lib/page-shell.js');
 const { buildSitemapXml, buildRobotsTxt } = require('../../../engine/lib/sitemap.js');
 const { buildSearchIndex, firstLetterBucketer } = require('../../../engine/lib/search-index.js');
 const { renderCollection, countFilesRecursive } = require('../../../engine/lib/render-loop.js');
 const { validateBasicPage } = require('../../../engine/lib/html-validate.js');
 const nicheConfig = require('../config.js');
+const guides = require('./guide-pages.js');
 
 const SITE_URL = process.env.SITE_URL || nicheConfig.defaultSiteUrl;
 
@@ -157,7 +158,8 @@ function renderCityPage(cityRecord, allCities, crops) {
 
   const bodyHtml = `${layout.buildBreadcrumbs(city)}
 <h1>Frost Dates &amp; Planting Calendar for ${layout.escapeHtml(city.name)}, ${layout.escapeHtml(city.state)}</h1>
-<p class="lede">${layout.escapeHtml(buildLede(city))}</p>
+<p class="lede answer">${layout.escapeHtml(layout.buildAnswerLede(city))}</p>
+<p>${layout.escapeHtml(buildLede(city))}</p>
 ${layout.buildSummaryBox(city)}
 ${layout.buildCountdownWidget(city)}
 <h2>Monthly Temperatures</h2>
@@ -189,13 +191,15 @@ function renderStatePage(stateAbbr, stateCities) {
   const name = layout.stateName(stateAbbr);
   const stateSlug = stateCities[0].stateSlug;
   const title = layout.buildStateTitle(name);
-  const description = layout.buildStateDescription(name, stateCities.length);
+  const description = layout.buildStateDescription(name, stateCities);
   const canonical = `${SITE_URL}/${stateSlug}/`;
 
   const bodyHtml = `${layout.buildGenericBreadcrumbs([{ label: 'Home', href: '/' }, { label: name }])}
 <h1>Frost Dates &amp; Planting Calendars in ${layout.escapeHtml(name)}</h1>
-<p class="lede">Typical last spring frost, first fall frost, and growing-season length for ${stateCities.length} cities in ${layout.escapeHtml(name)}, based on NOAA 1991&ndash;2020 climate normals. Click a city for its full frost-date summary, monthly temperature chart, and 42-crop planting calendar.</p>
-${layout.buildStateTable(stateCities)}`;
+<p class="lede answer">${layout.escapeHtml(layout.buildStateLede(name, stateCities))}</p>
+${layout.buildStateTable(stateCities)}
+<h2>When to Plant in ${layout.escapeHtml(name)}</h2>
+${guides.buildCropLinkGrid(stateAbbr)}`;
 
   return buildPageShell({
     title,
@@ -224,15 +228,30 @@ function prepareSearchIndex(cities, siteDir) {
 }
 
 function renderHomePage(cities, searchMode, searchPayload, statesMeta, topCities) {
-  const title = 'FrostCal — Frost Dates & Planting Calendars for US Cities';
-  const description = `Free frost dates, growing season length, and a 42-crop planting calendar for ${cities.length.toLocaleString()} US cities, based on NOAA climate normals.`;
+  const n = cities.length.toLocaleString('en-US');
+  const title = 'When Is Frost in My Area? Frost Dates by ZIP Code';
+  const description = layout.pickLength([
+    `Find your first and last frost dates by ZIP code or city: NOAA-based frost dates, hardiness zones, and planting calendars for ${n} US cities.`,
+    `Frost dates by ZIP code and city for ${n} US cities, from NOAA climate normals.`
+  ], 155);
   const canonical = `${SITE_URL}/`;
+  const popular = ['tomato', 'pepper', 'cucumber', 'green-bean', 'lettuce', 'potato', 'garlic', 'zucchini', 'carrot', 'onion', 'basil', 'sunflower'];
+  const crops = require('../data/crops.json');
+  const popularLinks = popular
+    .map((slug) => crops.find((c) => c.slug === slug))
+    .filter(Boolean)
+    .map((c) => `<li><a href="${layout.escapeHtml(basePathLib.href(`/plant/${c.slug}/`))}">${layout.escapeHtml(guides.cropTitle(c))}</a></li>`)
+    .join('');
 
   const bodyHtml = `<div class="hero">
-<h1>Frost Dates &amp; Planting Calendars for ${cities.length.toLocaleString()} US Cities</h1>
-<p class="lede">FrostCal turns NOAA's 1991&ndash;2020 climate normals into plain-English last-frost and first-frost dates, growing-season length, and a free 42-crop planting calendar for your city.</p>
+<h1>When Is Frost in My Area?</h1>
+<p class="lede">Enter your ZIP code or use your location to get your average first fall frost, last spring frost, hardiness zone, and a 42-crop planting calendar &mdash; from NOAA's 1991&ndash;2020 climate normals for ${n} US cities.</p>
 </div>
+${guides.buildLocateWidget()}
 ${layout.buildSearchWidget(searchMode, searchPayload)}
+<h2>When to Plant</h2>
+<ul class="link-grid">${popularLinks}</ul>
+<p><a href="${layout.escapeHtml(basePathLib.href('/plant/'))}">All ${crops.length} crops</a> &middot; <a href="${layout.escapeHtml(basePathLib.href('/zones/'))}">Frost dates by USDA hardiness zone</a></p>
 <h2>Top 100 Cities by Population</h2>
 ${layout.buildTopCitiesTable(topCities)}
 <h2>How This Works</h2>
@@ -249,6 +268,18 @@ ${layout.buildStatesAZList(statesMeta)}`;
     bodyHtml,
     footerHtml: layout.buildFooter()
   });
+}
+
+/** <head> tags for analytics and ads, driven by niches/frost/config.js. */
+function buildHeadExtras() {
+  const parts = [];
+  if (nicheConfig.goatcounterCode) {
+    parts.push(`<script data-goatcounter="https://${nicheConfig.goatcounterCode}.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>`);
+  }
+  if (nicheConfig.adsensePublisherId) {
+    parts.push(`<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-${nicheConfig.adsensePublisherId}" crossorigin="anonymous"></script>`);
+  }
+  return parts.join('\n');
 }
 
 function renderMethodologyPage() {
@@ -403,6 +434,7 @@ function runSample() {
 
 function runFull() {
   basePathLib.setBasePath(process.env.BASE_PATH || '');
+  setShellDefaults({ headExtraHtml: buildHeadExtras() });
 
   const dataDir = path.join(__dirname, '..', 'data');
   const templatesDir = path.join(__dirname, '..', 'templates');
@@ -454,6 +486,21 @@ function runFull() {
     console.log(`  CNAME: ${nicheConfig.customDomain}`);
   }
 
+  // Files that must sit at the site root verbatim (search-engine
+  // verification files and the like): drop them in niches/frost/static/.
+  const staticDir = path.join(__dirname, '..', 'static');
+  if (fs.existsSync(staticDir)) {
+    for (const name of fs.readdirSync(staticDir)) {
+      if (name.startsWith('.')) continue;
+      fs.copyFileSync(path.join(staticDir, name), path.join(siteDir, name));
+      console.log(`  static: ${name}`);
+    }
+  }
+  if (nicheConfig.adsensePublisherId) {
+    fs.writeFileSync(path.join(siteDir, 'ads.txt'), `google.com, ${nicheConfig.adsensePublisherId}, DIRECT, f08c47fec0942fa0\n`, 'utf8');
+    console.log('  ads.txt: written');
+  }
+
   // --- 1. City pages -----------------------------------------------------
   const { ok: cityOk, errors: cityErrors } = renderCollection(cities, {
     siteDir,
@@ -482,6 +529,15 @@ function runFull() {
   }
   console.log(`  state pages: ${statePagesOk}/${stateGroups.size}`);
 
+  // --- 2b. Zone pages, crop guides, ZIP/location lookup data ----------------
+  const zoneUrls = guides.renderZonePages(cities, siteDir);
+  console.log(`  zone pages: ${zoneUrls.length}`);
+  const calIndex = guides.buildCalendarIndex(cities);
+  const cropUrls = guides.renderCropPages(cities, calIndex, siteDir);
+  console.log(`  crop guide pages: ${cropUrls.length}`);
+  const locate = guides.writeLocateData(cities, siteDir, path.join(dataDir, 'zipcodes.csv'));
+  console.log(`  ZIP lookup: ${locate.mapped}/${locate.total} ZIPs mapped to a city within 150 km (${locate.shardCount} shards)`);
+
   // --- 3. Homepage (incl. search index) -----------------------------------
   const { mode: searchMode, payload: searchPayload, bytes: searchBytes } = prepareSearchIndex(cities, siteDir);
   const topCities = cities.slice().sort((a, b) => (b.population || 0) - (a.population || 0)).slice(0, 100);
@@ -505,6 +561,7 @@ function runFull() {
   // --- 5. sitemap.xml, robots.txt, 404.html --------------------------------
   const urls = ['/', '/methodology/', '/privacy/', '/contact/'];
   for (const { stateSlug } of statesMeta) urls.push(`/${stateSlug}/`);
+  urls.push(...zoneUrls, ...cropUrls);
   for (const city of cities) urls.push(`/${city.stateSlug}/${city.slug}/`);
   fs.writeFileSync(path.join(siteDir, 'sitemap.xml'), buildSitemapXml(urls, SITE_URL), 'utf8');
   fs.writeFileSync(path.join(siteDir, 'robots.txt'), buildRobotsTxt(SITE_URL), 'utf8');
@@ -525,6 +582,7 @@ function runFull() {
     if (cityErrors.length > 20) console.log(`   ...and ${cityErrors.length - 20} more`);
   }
   console.log(`State pages: ${statePagesOk} (of ${stateGroups.size} states)`);
+  console.log(`Zone pages:  ${zoneUrls.length}  Crop guides: ${cropUrls.length}  ZIPs mapped: ${locate.mapped}/${locate.total}`);
   console.log(`Slug collisions disambiguated: ${slugCollisions}`);
   console.log(`Homepage search index: ${searchMode} (${(searchBytes / 1024).toFixed(1)} KB raw compact JSON)`);
   console.log(`Sitemap URLs: ${urls.length}`);

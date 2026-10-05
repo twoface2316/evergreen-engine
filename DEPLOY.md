@@ -44,45 +44,61 @@ The old `twoface2316.github.io/evergreen-engine/` property and its verification 
 
 Expect weeks, not days, for meaningful indexing of 5,000 pages.
 
-## 3. Monetization timeline
+## 3. Monetization
 
-- **Month 0-2:** nothing. Let it index. Adding ads to an unindexed site helps no one.
-- **Month 2-3:** apply for Google AdSense once pages are indexed and pulling any impressions. Approval wants: custom domain (subpath github.io often rejected), privacy policy page (done — `/privacy/`), contact page (done — `/contact/`).
-- **Month 6+:** if traffic reaches ~10k sessions/mo, apply to Ezoic (low bar) or keep growing toward Mediavine Journey (~10k) / full Mediavine (50k sessions).
-- **Anytime:** Amazon Associates links on crop rows (seed-starting trays, row covers, soil thermometers) — contextual, low effort.
+Both IDs live in `niches/frost/config.js`. Paste the value, push, and CI rebuilds every page with it. You can make the edit on github.com (open the file, click the pencil, commit). No local tools needed.
+
+### GoatCounter analytics (free, 5 minutes)
+
+1. Go to https://www.goatcounter.com/signup.
+2. **Code**: `frostcal` (or anything; this becomes `frostcal.goatcounter.com`). Enter your email and a password, then submit.
+3. Set `goatcounterCode: 'frostcal'` (the code you chose) in `niches/frost/config.js` and commit.
+4. After the deploy finishes (~2 min), visit https://frostcal.com and then your dashboard at `https://<code>.goatcounter.com`. The visit should appear within a minute.
+
+The privacy policy already discloses cookie-free analytics.
+
+### Google AdSense
+
+1. Go to https://adsense.google.com → **Get started** → sign in with your Google account → site: `frostcal.com` → country → accept the terms.
+2. Find your publisher ID: **Account → Settings → Account information → Publisher ID** (looks like `pub-1234567890123456`).
+3. Set `adsensePublisherId: 'pub-…'` in `niches/frost/config.js` and commit. This adds the AdSense tag to every page and publishes `https://frostcal.com/ads.txt`.
+4. In AdSense: **Sites → frostcal.com** → choose **AdSense code snippet** as the verification method → **Verify** (the tag is already live) → **Request review**.
+5. Review takes from a few days up to about 4 weeks. Until approved, no ads show; the tag sits idle.
+6. Once approved: **Ads → By site → frostcal.com → Auto ads on**. Google picks placements; nothing else to code.
+
+If AdSense rejects the site ("low value content" is the common reason for programmatic sites), apply to **Ezoic** (no traffic minimum) instead, or reapply after another month of growth.
+
+### Later
+
+- **Amazon Associates**: affiliate links on crop pages (seeds, grow lights, seed-starting trays). Sign up only once traffic is ramping. The account closes if it doesn't make 3 sales within 180 days.
+- **Mediavine Journey** (~10k sessions/month) and full **Mediavine** (50k) pay several times what AdSense does. Switch when traffic qualifies.
 
 ## 4. Traffic monitoring
 
-GitHub Pages has no server logs, so traffic visibility comes from two layers:
+- **Google Search Console**: impressions, clicks, queries, rankings. This is the main "is SEO working" dashboard. Check weekly; data lags about 2 days.
+- **GoatCounter** (once set up): every visitor, not just Google clicks, plus referrers and which pages people actually read.
 
-**Search performance — Google Search Console** (free, no code changes). Once the property is verified (§1), the Performance report shows impressions, clicks, queries, and per-page rankings. This is the primary "is SEO working" dashboard. Check weekly; data lags ~2 days.
+## 5. How builds and deploys work
 
-**On-site visitors — pick ONE lightweight analytics service** (all work on static sites, one `<script>` tag):
+The generated site is **not committed**. `.github/workflows/deploy-pages.yml` renders it in CI and publishes it:
 
-| Service | Cost | Notes |
-|---|---|---|
-| GoatCounter | Free | Cookie-free, public or private dashboard, easiest start |
-| Cloudflare Web Analytics | Free | Cookie-free; natural fit if the domain lands on Cloudflare anyway |
-| Plausible | ~$9/mo | Nicest UI; not worth paying until real traffic |
+- on every push to `main`
+- on the 1st of every month (scheduled), so seasonal copy stays current: city titles and snippets lead with the **first fall frost from August** and the **last spring frost from January**, and quote the current year
+- on demand: GitHub → Actions → "Build and deploy frost site" → **Run workflow**
 
-Setup (GoatCounter example): create an account at goatcounter.com → get your site code → add the snippet to the page template (`buildPageShell` in `niches/frost/scripts/render.js` or the footer in `niches/frost/templates/layout.js`) → re-render + push. The privacy policy at `/privacy/` already discloses cookie-free analytics, so no policy change needed.
+Each run also runs the calendar tests and checks a 300-page sample for broken internal links. A failure stops the deploy and the live site stays on the previous version.
 
-Skip Google Analytics 4: heavyweight, cookie-consent obligations, overkill for a content site at this stage.
+Note: GitHub disables scheduled workflows in repos with no commits for 60 days. The workflow re-enables itself on each scheduled run. If GitHub ever emails that it was disabled anyway, open Actions and click **Enable workflow**.
 
-## 5. Redeploy after changes
+Files that must sit at the site root verbatim (search-engine verification files and the like) go in `niches/frost/static/`, not `sites/frost/`. Anything placed directly in `sites/` is discarded.
 
-Any push to `main` redeploys automatically (`.github/workflows/deploy-pages.yml` publishes `sites/frost/`).
-
-Typical loop:
+To preview locally:
 ```powershell
 node niches/frost/scripts/render.js full
 node engine/check-links.js sites/frost
-git add -A; git commit -m "..."; git push
 ```
-`SITE_URL` and the CNAME both come from `niches/frost/config.js` now — no env vars needed for a production build.
 
-## 6. Content freshness (SEO maintenance, ~quarterly)
+## 6. Content freshness
 
-- NOAA normals update every 10 years (next: 2031 for 2001-2030) — pipeline rerun then.
-- Add content pages occasionally (e.g. "seed starting guide", per-crop deep pages) — pure static additions under `sites/frost/`.
-- Watch Search Console for crawl errors after each deploy.
+- NOAA normals update every 10 years (next: 2031 for 2001-2030); rerun the pipeline then.
+- Search Console exports (Performance → Export) are the input for improvements: pages at positions 5-20 with high impressions are where title or content changes pay off fastest.

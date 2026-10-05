@@ -444,3 +444,94 @@ table.top-cities-table .rank-cell {
 .methodology h2 { margin-top: 36px; }
 .methodology dt { font-weight: 600; margin-top: 14px; }
 .methodology dd { margin: 4px 0 0; color: var(--text-muted); }
+
+/* ---------- direct-answer lede (city, state, guide pages) ---------- */
+.lede.answer {
+  color: var(--text);
+  font-size: 1.08rem;
+  background: var(--accent-soft);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 12px 16px;
+}
+
+/* ---------- ZIP / location lookup ---------- */
+.locate-box {
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin: 8px 0 16px;
+}
+.locate-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.locate-row .search-input { flex: 1; min-width: 0; }
+.btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--accent-dark);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+.btn:hover { background: var(--accent-dark); }
+.btn-secondary {
+  background: transparent;
+  color: var(--link);
+  border-color: var(--border);
+  width: 100%;
+}
+.btn-secondary:hover { background: var(--surface-2); }
+.locate-status {
+  min-height: 1.2em;
+  margin: 8px 0 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+/* ---------- link grids (crops, guides) ---------- */
+.link-grid {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px 16px;
+}
+.link-grid li {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ---------- fact row (zone / crop guide pages) ---------- */
+.fact-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 24px;
+  margin: 0 0 18px;
+  font-size: 0.95rem;
+}
+.fact-row .label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+td.crop-name a { font-weight: 600; text-decoration: none; }
+td.crop-name a:hover { text-decoration: underline; }
+
+/* Guide tables have 2-5 columns: let them fit a phone instead of scrolling. */
+table.calendar.compact { min-width: 0; }
+table.calendar.compact td, table.calendar.compact th { padding: 8px 10px; }
+table.calendar.compact td { white-space: normal; }
+@media (max-width: 480px) {
+  table.calendar.compact { font-size: 0.85rem; }
+  table.calendar.compact td, table.calendar.compact th { padding: 7px 6px; }
+}

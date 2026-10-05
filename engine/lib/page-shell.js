@@ -23,6 +23,15 @@ const { escapeHtml } = require('./escape-html.js');
  *   wrapMain               // default true: wraps bodyHtml in <main class="wrap">...</main>
  * }) -> full HTML document string
  */
+// Site-wide <head> additions (analytics, ad-network tags) set once per build
+// via setShellDefaults(), so every page type picks them up without each
+// renderer having to pass them.
+let defaultHeadExtraHtml = '';
+
+function setShellDefaults({ headExtraHtml = '' } = {}) {
+  defaultHeadExtraHtml = headExtraHtml;
+}
+
 function buildPageShell(opts) {
   const {
     title,
@@ -34,7 +43,8 @@ function buildPageShell(opts) {
     headerHtml = '',
     bodyHtml = '',
     footerHtml = '',
-    wrapMain = true
+    wrapMain = true,
+    headExtraHtml = defaultHeadExtraHtml
   } = opts;
 
   const main = wrapMain ? `<main class="wrap">\n${bodyHtml}\n${footerHtml}\n</main>` : `${bodyHtml}\n${footerHtml}`;
@@ -53,6 +63,7 @@ ${canonical ? `<link rel="canonical" href="${canonical}">\n` : ''}<meta name="ro
 <meta property="og:description" content="${escapeHtml(description)}">
 <meta name="twitter:card" content="summary">
 ${jsonLdHtml}
+${headExtraHtml}
 </head>
 <body>
 ${headerHtml}
@@ -62,4 +73,4 @@ ${main}
 `;
 }
 
-module.exports = { buildPageShell };
+module.exports = { buildPageShell, setShellDefaults };

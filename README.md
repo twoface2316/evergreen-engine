@@ -13,9 +13,12 @@ engine/            Niche-agnostic tooling (link checker, shared libs)
 niches/frost/      Frost niche
   config.js        Site title, URL defaults, niche settings
   scripts/         Data pipeline (download, build, zones) + render
+                   render.js: city, state, home, static pages
+                   guide-pages.js: zone pages, crop-by-state guides, ZIP lookup data
   templates/       Page layout + stylesheet
-  data/            Final JSONs (committed); data/raw/ gitignored (~1.4GB)
-sites/frost/       Generated static site (committed, deployed by CI)
+  data/            Final JSONs + zipcodes.csv (committed); data/raw/ gitignored (~1.4GB)
+  static/          Files copied verbatim to the site root (verification files etc.)
+sites/frost/       Generated static site (gitignored; built by CI)
 ```
 
 ## Build
@@ -23,7 +26,7 @@ sites/frost/       Generated static site (committed, deployed by CI)
 ```
 node niches/frost/scripts/test-calendar.js        # unit tests
 node niches/frost/scripts/render.js sample        # 5 sample pages
-node niches/frost/scripts/render.js full          # full 5,078-page build
+node niches/frost/scripts/render.js full          # full ~7,300-page build
 node engine/check-links.js sites/frost
 ```
 
@@ -38,7 +41,7 @@ node niches/frost/scripts/render.js full
 
 ## Deploy
 
-Push to `main` — `.github/workflows/deploy-pages.yml` publishes `sites/frost/` to GitHub Pages. See `DEPLOY.md` for post-deploy checklist (Search Console, custom domain, monetization).
+Push to `main`. `.github/workflows/deploy-pages.yml` renders the site in CI, runs the tests and link check, and publishes `sites/frost/` to GitHub Pages. It also rebuilds monthly so seasonal titles stay current. See `DEPLOY.md` for analytics/AdSense setup and the build model.
 
 ## Adding a niche
 

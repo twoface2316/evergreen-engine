@@ -18,5 +18,14 @@ module.exports = {
   customDomain: 'frostcal.com',
   // Shown on /contact/ and referenced in the privacy policy. Swap for a
   // site-specific alias before heavy promotion if desired.
-  contactEmail: 'twoface692@gmail.com'
+  contactEmail: 'twoface692@gmail.com',
+
+  // ---- Monetization / analytics: paste IDs here, push, done. ----
+  // GoatCounter site code: the "frostcal" in https://frostcal.goatcounter.com.
+  // null = no analytics script on the site.
+  goatcounterCode: null,
+  // AdSense publisher ID, e.g. 'pub-1234567890123456' (from AdSense ->
+  // Account -> Account information). Adds the Auto ads tag to every page and
+  // writes /ads.txt. null = no ads.
+  adsensePublisherId: null
 };

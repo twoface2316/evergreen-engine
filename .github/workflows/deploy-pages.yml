@@ -1,14 +1,21 @@
-name: Deploy frost site to GitHub Pages
+name: Build and deploy frost site
 
+# The site is generated here, not committed: every push, plus a monthly
+# rebuild so date-sensitive copy stays current (snippets lead with the first
+# fall frost from August and the last spring frost from January, and quote
+# the current year).
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '17 9 1 * *'
   workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
 concurrency:
   group: pages
@@ -22,9 +29,25 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Calendar tests
+        run: node niches/frost/scripts/test-calendar.js
+      - name: Render site
+        run: node niches/frost/scripts/render.js full
+      - name: Check internal links
+        run: node engine/check-links.js sites/frost --sample=300 --state-sample=10
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: sites/frost
       - id: deployment
         uses: actions/deploy-pages@v4
+      # GitHub disables scheduled workflows after 60 days without repo
+      # activity; re-enabling on every run keeps the monthly rebuild alive.
+      - name: Keep monthly schedule enabled
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/deploy-pages.yml/enable"

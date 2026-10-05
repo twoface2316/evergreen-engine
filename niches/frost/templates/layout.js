@@ -87,30 +87,87 @@ function nearestCitiesSameState(city, allCities, n) {
 // Meta title / description (real values, length-bounded)
 // ---------------------------------------------------------------------
 
-function buildTitle(city) {
-  const candidates = [
-    `Frost Dates & Planting Calendar for ${city.name}, ${city.state}`,
-    `${city.name}, ${city.state} Frost Dates & Planting Calendar`,
-    `${city.name}, ${city.state} Frost Dates & Garden Calendar`,
-    `${city.name}, ${city.state} Frost Dates`
-  ];
-  for (const c of candidates) {
-    if (c.length <= 60) return c;
-  }
-  return candidates[candidates.length - 1].slice(0, 60);
+/**
+ * Season context for search snippets. Searchers want the frost date that is
+ * coming up next: first fall frost from August through December, last spring
+ * frost from January through July. A monthly CI rebuild keeps this current.
+ * BUILD_DATE (YYYY-MM-DD) overrides "today" for testing.
+ */
+function seasonContext(now) {
+  const d = now || (process.env.BUILD_DATE ? new Date(process.env.BUILD_DATE + 'T12:00:00Z') : new Date());
+  const month = d.getUTCMonth() + 1;
+  return { season: month >= 8 ? 'fall' : 'spring', year: d.getUTCFullYear() };
 }
 
-function buildDescription(city) {
-  let base;
-  if (city.frostFree) {
-    base = `${city.name}, ${city.state} is frost-free per NOAA normals. See year-round planting guidance and a free 42-crop garden calendar.`;
-  } else {
-    const lastP50 = formatDateLong(city.lastSpringFrost && city.lastSpringFrost.p50);
-    base = `Average last frost in ${city.name}, ${city.state} is ${lastP50}. Get frost dates, growing season length, and a free 42-crop planting calendar.`;
+function pickLength(candidates, max) {
+  for (const c of candidates) {
+    if (c.length <= max) return c;
   }
-  if (base.length <= 155) return base;
-  const short = `Frost dates, growing season, and a planting calendar for ${city.name}, ${city.state}, based on NOAA climate normals.`;
-  return short.length <= 155 ? short : short.slice(0, 152) + '...';
+  return candidates[candidates.length - 1].slice(0, max);
+}
+
+function buildTitle(city, ctx) {
+  const { season } = ctx || seasonContext();
+  const place = `${city.name}, ${city.state}`;
+  if (city.frostFree) {
+    return pickLength([
+      `${place} Frost Dates: Frost-Free${city.zone ? ` (Zone ${city.zone})` : ''}`,
+      `${place} Frost Dates: Frost-Free`,
+      `${place} Frost Dates`
+    ], 60);
+  }
+  const last = formatDateShort(city.lastSpringFrost.p50);
+  const first = formatDateShort(city.firstFallFrost.p50);
+  const pair = season === 'fall' ? `First ${first}, Last ${last}` : `Last ${last}, First ${first}`;
+  const lead = season === 'fall' ? `First Frost ${first}` : `Last Frost ${last}`;
+  return pickLength([
+    `${place} Frost Dates: ${pair}`,
+    `${place}: ${lead}`,
+    `${city.name} Frost Dates: ${pair}`,
+    `${city.name}: ${lead}`
+  ], 60);
+}
+
+function buildDescription(city, ctx) {
+  const { season, year } = ctx || seasonContext();
+  const place = `${city.name}, ${city.state}`;
+  if (city.frostFree) {
+    return pickLength([
+      `${place} is essentially frost-free per NOAA 1991-2020 normals${city.zone ? ` (USDA Zone ${city.zone})` : ''}. Year-round planting guidance for 42 vegetables, herbs, and flowers.`,
+      `${place} is essentially frost-free per NOAA normals. Year-round planting guidance for 42 crops.`
+    ], 155);
+  }
+  const lastP50 = formatDateShort(city.lastSpringFrost.p50);
+  const lastLate = formatDateShort(city.lastSpringFrost.p10);
+  const firstP50 = formatDateShort(city.firstFallFrost.p50);
+  const firstEarly = formatDateShort(city.firstFallFrost.p10);
+  const zone = city.zone ? ` Zone ${city.zone}.` : '';
+  const candidates = season === 'fall'
+    ? [
+        `${place} first frost ${year}: ${firstP50} on average, as early as ${firstEarly} (1 year in 10). Last spring frost: ${lastP50}.${zone} Free planting calendar.`,
+        `${place} first frost: ${firstP50} on average, as early as ${firstEarly}. Last spring frost: ${lastP50}.${zone} Planting calendar.`,
+        `First frost in ${place}: ${firstP50} on average. Last spring frost: ${lastP50}. Planting calendar for 42 crops.`
+      ]
+    : [
+        `${place} last frost ${year}: ${lastP50} on average, as late as ${lastLate} (1 year in 10). First fall frost: ${firstP50}.${zone} Free planting calendar.`,
+        `${place} last frost: ${lastP50} on average, as late as ${lastLate}. First fall frost: ${firstP50}.${zone} Planting calendar.`,
+        `Last frost in ${place}: ${lastP50} on average. First fall frost: ${firstP50}. Planting calendar for 42 crops.`
+      ];
+  return pickLength(candidates, 155);
+}
+
+/** One-sentence direct answer shown under the H1 (snippet-friendly). */
+function buildAnswerLede(city, ctx) {
+  const { season } = ctx || seasonContext();
+  if (city.frostFree) {
+    return `${city.name}, ${city.state} is essentially frost-free: NOAA's 1991–2020 normals for the nearest station record no typical freeze, so planting is timed around heat and rainfall rather than frost.`;
+  }
+  const last = formatDateLong(city.lastSpringFrost.p50);
+  const first = formatDateLong(city.firstFallFrost.p50);
+  const days = city.growingSeasonDays != null ? `, giving a growing season of about ${city.growingSeasonDays} days` : '';
+  return season === 'fall'
+    ? `The average first fall frost in ${city.name}, ${city.state} is ${first}, and the average last spring frost is ${last}${days}.`
+    : `The average last spring frost in ${city.name}, ${city.state} is ${last}, and the average first fall frost is ${first}${days}.`;
 }
 
 // ---------------------------------------------------------------------
@@ -156,7 +213,7 @@ function zoneSummaryItem(city) {
   if (zone) {
     return `<div class="summary-item">
       <div class="label">USDA Hardiness Zone</div>
-      <div class="value"><span id="usda-zone">Zone ${escapeHtml(zone)}</span></div>
+      <div class="value"><a id="usda-zone" href="${escapeHtml(url(`/zones/${zone}/`))}">Zone ${escapeHtml(zone)}</a></div>
       <div class="sub">${escapeHtml(buildZoneCopy(zone))}</div>
     </div>`;
   }
@@ -214,30 +271,40 @@ function buildSummaryBox(city) {
 
 function buildCountdownWidget(city) {
   if (city.frostFree) return '';
-  const md = parseMonthDay(city.lastSpringFrost.p50);
-  if (!md) return '';
-  const data = JSON.stringify({ month: md.month, day: md.day });
+  const last = parseMonthDay(city.lastSpringFrost.p50);
+  const first = parseMonthDay(city.firstFallFrost.p50);
+  if (!last || !first) return '';
+  // Counts to whichever typical frost comes next from the visitor's date:
+  // first fall frost through autumn, last spring frost through winter/spring.
+  const data = JSON.stringify({ last, first });
   return `<div class="countdown" id="frost-countdown">
   <span class="num" id="frost-countdown-num">—</span>
-  <span class="txt">days until the typical last spring frost</span>
+  <span class="txt" id="frost-countdown-txt">days until the typical last spring frost</span>
 </div>
 <script type="application/json" id="frost-countdown-data">${data}</script>
 <script>(function(){
   var el = document.getElementById('frost-countdown-num');
+  var txt = document.getElementById('frost-countdown-txt');
   var dEl = document.getElementById('frost-countdown-data');
-  if (!el || !dEl) return;
+  if (!el || !txt || !dEl) return;
   try {
     var d = JSON.parse(dEl.textContent);
     var now = new Date();
-    var target = new Date(now.getFullYear(), d.month - 1, d.day);
-    target.setHours(0,0,0,0);
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    if (target < today) target.setFullYear(target.getFullYear() + 1);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function next(md) {
+      var t = new Date(now.getFullYear(), md.month - 1, md.day);
+      if (t < today) t.setFullYear(t.getFullYear() + 1);
+      return t;
+    }
+    var tl = next(d.last), tf = next(d.first);
+    var useFirst = tf <= tl;
+    var target = useFirst ? tf : tl;
+    var md = useFirst ? d.first : d.last;
+    var label = (useFirst ? 'typical first fall frost' : 'typical last spring frost') + ' (' + months[md.month - 1] + ' ' + md.day + ')';
     var days = Math.round((target - today) / 86400000);
     el.textContent = days === 0 ? 'Today' : String(days);
-    if (days === 0) {
-      el.nextElementSibling.textContent = 'is the typical last spring frost';
-    }
+    txt.textContent = days === 0 ? 'is the ' + label : (days === 1 ? 'day until the ' : 'days until the ') + label;
   } catch (e) {}
 })();</script>`;
 }
@@ -302,7 +369,7 @@ function buildCalendarTable(city, calendarEntries) {
       const body = rows
         .map(
           (r) => `<tr>
-        <td class="crop-name">${escapeHtml(r.name)}</td>
+        <td class="crop-name"><a href="${escapeHtml(url(cropGuidePath(r.slug, city.state)))}">${escapeHtml(r.name)}</a></td>
         <td class="note-cell">${escapeHtml(r.frostFreeNote || '—')}</td>
         <td>${escapeHtml(daysToMaturityLabel(r.daysToMaturity))}</td>
       </tr>`
@@ -324,7 +391,7 @@ function buildCalendarTable(city, calendarEntries) {
         const transplant = r.transplant ? r.transplant.label : '—';
         const fall = r.fallPlanting ? r.fallPlanting.label : '—';
         return `<tr>
-        <td class="crop-name">${escapeHtml(r.name)}</td>
+        <td class="crop-name"><a href="${escapeHtml(url(cropGuidePath(r.slug, city.state)))}">${escapeHtml(r.name)}</a></td>
         <td>${escapeHtml(seed)}</td>
         <td>${escapeHtml(sow)}</td>
         <td>${escapeHtml(transplant)}</td>
@@ -477,6 +544,7 @@ function buildFooter() {
   <div class="disclaimer">This page is for general gardening reference only and is <strong>not agronomic, professional, or safety advice</strong>. Frost dates are statistical probabilities from historical climate normals, not guarantees — always check a local forecast before planting or protecting tender plants.</div>
   <p>Frost and temperature normals: <a href="https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals" rel="noopener">NOAA NCEI 1991–2020 U.S. Climate Normals</a>.</p>
   <p>City and place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.</p>
+  <p><a href="${escapeHtml(url('/'))}">Frost dates by ZIP code</a> &middot; <a href="${escapeHtml(url('/zones/'))}">Hardiness zones</a> &middot; <a href="${escapeHtml(url('/plant/'))}">When to plant</a></p>
   <p><a href="${escapeHtml(url('/methodology/'))}">How these dates are calculated (methodology)</a> &middot; <a href="${escapeHtml(url('/privacy/'))}">Privacy policy</a> &middot; <a href="${escapeHtml(url('/contact/'))}">Contact</a></p>
   <p>&copy; ${year} FrostCal.</p>
 </footer>`;
@@ -518,24 +586,72 @@ function buildGenericBreadcrumbs(trail) {
   return `<nav class="breadcrumbs" aria-label="Breadcrumb">${parts.join(' &rsaquo; ')}</nav>`;
 }
 
-function buildStateTitle(name) {
-  const candidates = [
-    `${name} Frost Dates & Planting Calendars by City`,
-    `${name} Frost Dates & Planting Calendars`,
-    `${name} Frost Dates by City`,
-    `${name} Frost Dates`
-  ];
-  for (const c of candidates) {
-    if (c.length <= 60) return c;
-  }
-  return candidates[candidates.length - 1].slice(0, 60);
+/** Earliest/latest P50 frost dates across a state's non-frost-free cities, with the city at each end. */
+function stateFrostRanges(stateCities) {
+  const frosty = stateCities.filter((c) => !c.frostFree && c.lastSpringFrost && c.firstFallFrost);
+  if (!frosty.length) return null;
+  const doy = (str) => { const md = parseMonthDay(str); return md ? Date.UTC(2001, md.month - 1, md.day) : 0; };
+  const by = (key) => frosty.slice().sort((a, b) => doy(a[key].p50) - doy(b[key].p50));
+  const last = by('lastSpringFrost');
+  const first = by('firstFallFrost');
+  return {
+    lastEarly: last[0], lastLate: last[last.length - 1],
+    firstEarly: first[0], firstLate: first[first.length - 1],
+    count: frosty.length
+  };
 }
 
-function buildStateDescription(name, cityCount) {
-  const base = `Frost dates and free planting calendars for ${cityCount} cities in ${name}, based on NOAA 1991-2020 climate normals.`;
-  if (base.length <= 155) return base;
-  const short = `Frost dates and planting calendars for cities in ${name}, based on NOAA climate normals.`;
-  return short.length <= 155 ? short : short.slice(0, 152) + '...';
+function buildStateTitle(name) {
+  return pickLength([
+    `${name} Frost Dates by City: Last & First Frost`,
+    `${name} Frost Dates by City`,
+    `${name} Frost Dates`
+  ], 60);
+}
+
+function buildStateDescription(name, stateCities, ctx) {
+  const { season } = ctx || seasonContext();
+  const r = stateFrostRanges(stateCities);
+  const n = stateCities.length;
+  if (!r) {
+    return pickLength([
+      `Most of ${name} is frost-free per NOAA 1991-2020 normals. Year-round planting guidance for ${n} cities.`,
+      `${name} frost dates and planting guidance for ${n} cities.`
+    ], 155);
+  }
+  const lastRange = `${formatDateShort(r.lastEarly.lastSpringFrost.p50)} (${r.lastEarly.name}) to ${formatDateShort(r.lastLate.lastSpringFrost.p50)} (${r.lastLate.name})`;
+  const firstRange = `${formatDateShort(r.firstEarly.firstFallFrost.p50)} (${r.firstEarly.name}) to ${formatDateShort(r.firstLate.firstFallFrost.p50)} (${r.firstLate.name})`;
+  const lastShort = `${formatDateShort(r.lastEarly.lastSpringFrost.p50)}–${formatDateShort(r.lastLate.lastSpringFrost.p50)}`;
+  const firstShort = `${formatDateShort(r.firstEarly.firstFallFrost.p50)}–${formatDateShort(r.firstLate.firstFallFrost.p50)}`;
+  const candidates = season === 'fall'
+    ? [
+        `First frost in ${name} ranges from ${firstRange}. Last spring frost: ${lastShort}. Dates for ${n} cities.`,
+        `First frost in ${name}: ${firstShort}; last spring frost: ${lastShort}. Frost dates for ${n} cities.`
+      ]
+    : [
+        `Last frost in ${name} ranges from ${lastRange}. First fall frost: ${firstShort}. Dates for ${n} cities.`,
+        `Last frost in ${name}: ${lastShort}; first fall frost: ${firstShort}. Frost dates for ${n} cities.`
+      ];
+  return pickLength(candidates, 155);
+}
+
+/** Direct-answer lede for a state page. */
+function buildStateLede(name, stateCities) {
+  const r = stateFrostRanges(stateCities);
+  if (!r) {
+    return `Nearly all of ${name} is frost-free per NOAA 1991–2020 climate normals. Pick a city below for its monthly temperatures and year-round planting guidance.`;
+  }
+  return `In ${name}, the average last spring frost ranges from ${formatDateLong(r.lastEarly.lastSpringFrost.p50)} in ${r.lastEarly.name} to ${formatDateLong(r.lastLate.lastSpringFrost.p50)} in ${r.lastLate.name}, and the average first fall frost from ${formatDateLong(r.firstEarly.firstFallFrost.p50)} in ${r.firstEarly.name} to ${formatDateLong(r.firstLate.firstFallFrost.p50)} in ${r.firstLate.name}. Pick a city for its full frost-date summary and 42-crop planting calendar.`;
+}
+
+/** Crop guide link: the crop's page for a state, or the all-states hub when there is no state (zone pages). */
+function cropGuidePath(cropSlug, stateAbbr) {
+  return stateAbbr ? `/plant/${cropSlug}/${stateNameSlug(stateAbbr)}/` : `/plant/${cropSlug}/`;
+}
+
+/** URL slug for a state's full name, e.g. "NC" -> "north-carolina" (used by crop guide URLs). */
+function stateNameSlug(abbr) {
+  return stateName(abbr).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 /** State index page: table of that state's cities sorted by population desc. */
@@ -792,8 +908,14 @@ module.exports = {
   formatDateShort,
   haversineKm,
   nearestCitiesSameState,
+  seasonContext,
+  pickLength,
   buildTitle,
   buildDescription,
+  buildAnswerLede,
+  stateFrostRanges,
+  buildStateLede,
+  stateNameSlug,
   buildSummaryBox,
   buildZoneCopy,
   buildCountdownWidget,
