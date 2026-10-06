@@ -610,3 +610,38 @@ table.calendar.compact td { white-space: normal; }
 @media (prefers-color-scheme: dark) {
   .printable-cta .btn { color: #12160f; }
 }
+
+/* ---------- printable calendar product page ---------- */
+.previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 18px 0 8px;
+}
+.previews figure { margin: 0; }
+.previews img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  background: #fff;
+}
+.previews figcaption { font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; }
+.product-list { padding-left: 1.2em; }
+.product-list li { margin-bottom: 8px; }
+.product .btn, .printable-cta .btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+}
+.product .btn:hover { background: var(--accent-dark); }
+.product .btn.small { padding: 5px 12px; font-size: 0.85rem; white-space: nowrap; }
+.printable-cta .more { margin-left: 14px; font-size: 0.9rem; }
+@media (prefers-color-scheme: dark) {
+  .product .btn { color: #12160f; }
+}

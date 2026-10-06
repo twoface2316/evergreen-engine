@@ -13,8 +13,10 @@
  * buildCta() once niches/frost/config.js `printables.url` is set.
  *
  * CLI (from repo root):
- *   node niches/frost/scripts/printables.js         -> HTML + PDF for every bucket
- *   node niches/frost/scripts/printables.js html    -> HTML only (no Chrome needed)
+ *   node niches/frost/scripts/printables.js           -> HTML + PDF for every bucket
+ *   node niches/frost/scripts/printables.js html      -> HTML only (no Chrome needed)
+ *   node niches/frost/scripts/printables.js previews  -> watermarked sample-page
+ *     images for the product page, written to niches/frost/static/ (committed)
  * Set CHROME_PATH if Chrome/Edge isn't in a standard install location.
  */
 
@@ -26,6 +28,8 @@ const { computeCalendar } = require('./calendar.js');
 const layout = require('../templates/layout.js');
 const nicheConfig = require('../config.js');
 const { cityKey } = require('./06-folds.js');
+const basePathLib = require('../../../engine/lib/base-path.js');
+const { buildPageShell } = require('../../../engine/lib/page-shell.js');
 
 const { escapeHtml, formatDateLong, formatDateShort } = layout;
 const cfg = nicheConfig.printables || {};
@@ -72,21 +76,89 @@ function bucketFor(city) {
 // City-page call to action
 // ---------------------------------------------------------------------
 
+const PRODUCT_PATH = '/printable-planting-calendar/';
+const PREVIEW_PAGES = [1, 2, 4];
+
+function storeLink(b) {
+  return (cfg.urls && cfg.urls[b.id]) || cfg.url;
+}
+
 function buildCta(city) {
   if (!cfg.url) return '';
   const b = bucketFor(city);
   if (!b) return '';
-  const link = (cfg.urls && cfg.urls[b.id]) || cfg.url;
+  const link = storeLink(b);
   return `<aside class="printable-cta">
 <h3>Printable planting calendar for ${escapeHtml(city.name)}</h3>
 <p>${escapeHtml(city.name)}'s average last frost (${escapeHtml(formatDateShort(city.lastSpringFrost.p50))}) puts it on our <strong>last frost ${escapeHtml(b.label)}</strong> calendar: a 12-month chart for 42 crops, a month-by-month task list, and a garden log, ready to print and pin up.</p>
 <a class="btn" href="${escapeHtml(link)}" rel="noopener">Get the ${escapeHtml(b.label)} calendar${cfg.price ? ` &middot; ${escapeHtml(cfg.price)}` : ''}</a>
+<a class="more" href="${escapeHtml(basePathLib.href(PRODUCT_PATH))}">See what's inside</a>
 </aside>`;
+}
+
+// ---------------------------------------------------------------------
+// Product page (/printable-planting-calendar/), rendered with the site
+// ---------------------------------------------------------------------
+
+function renderProductPage(cities, siteDir, siteUrl) {
+  const stats = bucketStats(cities);
+  const price = cfg.price || '';
+  const selling = Boolean(cfg.url);
+  const href = (p) => escapeHtml(basePathLib.href(p));
+  const captions = { 1: 'Page 1: your key frost dates and quick dates for popular crops', 2: 'Page 2: 12-month planting chart for 29 vegetables', 4: 'Page 4: what to do each month' };
+  const previews = PREVIEW_PAGES.map((n) => `<figure><img src="${href(`/printable-preview-${n}.png`)}" width="1056" height="816" loading="lazy" alt="${escapeHtml(captions[n])} (sample, last frost Apr 15–30 version)"><figcaption>${escapeHtml(captions[n])}</figcaption></figure>`).join('');
+  const rows = stats.map((s) => `<tr><td><strong>${escapeHtml(s.label)}</strong></td><td>${escapeHtml(s.examples.slice(0, 4).join(', '))}</td><td>${selling ? `<a class="btn small" href="${escapeHtml(storeLink(s))}" rel="noopener">Get it${price ? ` &middot; ${escapeHtml(price)}` : ''}</a>` : `${escapeHtml(price)}`}</td></tr>`).join('');
+  const faqs = [
+    { q: 'Which version do I need?', a: 'Pick the version whose date range contains your average last spring frost. Look up your ZIP code on FrostCal: your city page shows your average last frost and links to the matching calendar.' },
+    { q: 'What format is it?', a: 'A 5-page PDF sized for US Letter paper in landscape orientation, designed to print in color or black and white on a home printer.' },
+    { q: 'How do I get it?', a: 'Checkout is handled by Lemon Squeezy. The PDF download link is emailed to you right after purchase.' },
+    { q: 'Where do the dates come from?', a: 'Frost dates come from NOAA 1991–2020 climate normals, the same data behind every FrostCal city page. Planting windows follow university extension timing guidelines, counted from each version\'s frost dates.' },
+    { q: 'Is there a version for frost-free areas?', a: 'Not yet. Places whose last frost is usually before February (most of Florida, the Gulf Coast, and the low desert) plant around heat and rain rather than frost, so a frost-based calendar would be misleading there.' }
+  ];
+  const bodyHtml = `${layout.buildGenericBreadcrumbs([{ label: 'Home', href: '/' }, { label: 'Printable Planting Calendar' }])}
+<div class="product">
+<h1>Printable Planting Calendar by Frost Date</h1>
+<p class="lede answer">A 5-page planting calendar timed to your frost dates: a 12-month chart for 42 vegetables, herbs, and flowers, a month-by-month task list, and a garden log. Nine versions, one for each half-month of last-frost dates from February 1 to June 15.${price ? ` ${escapeHtml(price)} each, instant PDF download.` : ''}</p>
+${selling ? `<p><a class="btn" href="#versions">Choose your version</a></p>` : ''}
+<div class="previews">${previews}</div>
+<h2>What's inside</h2>
+<ul class="product-list">
+<li><strong>Your key dates:</strong> average last spring and first fall frost, the safer planting date, and growing-season length, plus quick dates for 10 popular crops.</li>
+<li><strong>Vegetable chart:</strong> when to start seeds indoors, sow outdoors, transplant, and plant for fall, on one 12-month timeline, with frost risk windows shaded.</li>
+<li><strong>Herb and flower chart:</strong> the same for 13 herbs and flowers.</li>
+<li><strong>Month-by-month tasks:</strong> every month's sowing and planting jobs on one page, with frost reminders.</li>
+<li><strong>Garden log:</strong> record what you planted and when frost actually came, so next year's dates fit your garden even better.</li>
+</ul>
+<h2 id="versions">Choose your version</h2>
+<p>Each version is built for gardens whose <a href="${href('/guides/how-frost-dates-work/')}">average last spring frost</a> falls in its date range. Not sure of yours? <a href="${href('/')}">Look up your ZIP code</a>; your city page names the matching version.</p>
+<div class="table-scroll"><table class="calendar compact"><thead><tr><th>Last frost</th><th>Includes, for example</th><th>${selling ? '' : 'Price'}</th></tr></thead><tbody>${rows}</tbody></table></div>
+<h2>Frequently Asked Questions</h2>
+${faqs.map((f) => `<div class="faq-item"><h3>${escapeHtml(f.q)}</h3><p>${escapeHtml(f.a)}</p></div>`).join('')}
+<p>Prefer free? Every city page on FrostCal has the same planting dates online. The printable puts them on paper for the fridge or the garden shed.</p>
+</div>`;
+
+  const ld = { '@context': 'https://schema.org', ...layout.buildFaqJsonLd(faqs) };
+  const html = buildPageShell({
+    title: 'Printable Planting Calendar by Frost Date (PDF)',
+    description: 'Printable PDF planting calendar timed to your frost date: 12-month chart for 42 crops, monthly garden tasks, and a garden log. Nine versions for last frosts Feb 1–Jun 15.',
+    canonical: `${siteUrl}${PRODUCT_PATH}`,
+    stylesheetHref: basePathLib.href('/style.css'),
+    jsonLdHtml: `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`,
+    headerHtml: layout.buildSiteHeader(),
+    bodyHtml,
+    footerHtml: layout.buildFooter()
+  });
+  const dir = path.join(siteDir, ...PRODUCT_PATH.split('/').filter(Boolean));
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'index.html'), html, 'utf8');
+  return PRODUCT_PATH;
 }
 
 // ---------------------------------------------------------------------
 // PDF content
 // ---------------------------------------------------------------------
+
+const NYC_BOROUGHS = new Set(['Brooklyn, NY', 'Queens, NY', 'Manhattan, NY', 'The Bronx, NY', 'Staten Island, NY']);
 
 function bucketStats(cities) {
   const groups = new Map(BUCKETS.map((b) => [b.id, []]));
@@ -101,7 +173,11 @@ function bucketStats(cities) {
     const medFall = (get) => doyStr(median(g.map((c) => { const n = strDoy(get(c)); return n < 182 ? n + 365 : n; })));
     const last = { p10: med((c) => c.lastSpringFrost.p10), p50: med((c) => c.lastSpringFrost.p50), p90: med((c) => c.lastSpringFrost.p90) };
     const first = { p10: medFall((c) => c.firstFallFrost.p10), p50: medFall((c) => c.firstFallFrost.p50), p90: medFall((c) => c.firstFallFrost.p90) };
-    const examples = g.slice().sort((a, c) => (c.population || 0) - (a.population || 0)).slice(0, 8).map((c) => `${c.name}, ${c.state}`);
+    // Largest city per state, skipping NYC boroughs (GeoNames lists them as places).
+    const seen = new Set();
+    const examples = g.slice().sort((a, c) => (c.population || 0) - (a.population || 0))
+      .filter((c) => !NYC_BOROUGHS.has(`${c.name}, ${c.state}`) && !seen.has(c.state) && seen.add(c.state))
+      .slice(0, 8).map((c) => `${c.name}, ${c.state}`);
     return { ...b, count: g.length, last, first, examples };
   });
 }
@@ -305,12 +381,15 @@ table.log th { text-align: left; border-bottom: 2px solid #3f7d4a; padding: 4px 
 table.log td { border-bottom: 1px solid #c9ccbd; height: 0.36in; }
 `;
 
-function renderBucketHtml(stats, crops) {
+/** Full calendar HTML; with previewPage set, only that page shows, stamped SAMPLE. */
+function renderBucketHtml(stats, crops, previewPage) {
+  const preview = previewPage ? `.page { display: none; } .page:nth-of-type(${previewPage}) { display: flex; }
+.page::after { content: 'SAMPLE'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-24deg); font-size: 150px; font-weight: 800; letter-spacing: .1em; color: rgba(63,125,74,.13); pointer-events: none; }` : '';
   const entries = computeCalendar({ frostFree: false, lastFrost: stats.last, firstFrost: stats.first }, crops);
   const veg = entries.filter((e) => e.category === 'vegetable');
   const other = entries.filter((e) => e.category !== 'vegetable');
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>FrostCal Planting Calendar: Last Frost ${escapeHtml(stats.label)}</title><style>${CSS}</style></head>
+<html lang="en"><head><meta charset="utf-8"><title>FrostCal Planting Calendar: Last Frost ${escapeHtml(stats.label)}</title><style>${CSS}${preview}</style></head>
 <body>
 ${overviewPage(stats, entries)}
 ${chartPage('Vegetable Planting Chart', veg, stats, 2)}
@@ -339,8 +418,25 @@ function loadCities() {
   return cities.filter((c) => !folded.has(cityKey(c)));
 }
 
+function runPreviews(crops) {
+  const chrome = findChrome();
+  if (!chrome) throw new Error('Chrome/Edge not found; set CHROME_PATH.');
+  const stats = bucketStats(loadCities()).find((s) => s.id === 'apr-15');
+  const tmpDir = path.join(__dirname, '..', '..', '..', 'out', 'printables', 'preview');
+  const staticDir = path.join(__dirname, '..', 'static');
+  fs.mkdirSync(tmpDir, { recursive: true });
+  for (const n of PREVIEW_PAGES) {
+    const htmlPath = path.join(tmpDir, `page-${n}.html`);
+    fs.writeFileSync(htmlPath, renderBucketHtml(stats, crops, n), 'utf8');
+    const png = path.join(staticDir, `printable-preview-${n}.png`);
+    execFileSync(chrome, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--window-size=1056,816', `--screenshot=${png}`, `file:///${htmlPath.replace(/\\/g, '/')}`], { stdio: 'ignore' });
+    console.log(`preview: ${path.relative(process.cwd(), png)} (${(fs.statSync(png).size / 1024).toFixed(0)} KB)`);
+  }
+}
+
 function run(mode) {
   const crops = require('../data/crops.json');
+  if (mode === 'previews') return runPreviews(crops);
   const outDir = path.join(__dirname, '..', '..', '..', 'out', 'printables');
   const htmlDir = path.join(outDir, 'html');
   const pdfDir = path.join(outDir, 'pdf');
@@ -366,4 +462,4 @@ function run(mode) {
 
 if (require.main === module) run(process.argv[2]);
 
-module.exports = { BUCKETS, bucketFor, buildCta, bucketStats, renderBucketHtml };
+module.exports = { BUCKETS, bucketFor, buildCta, bucketStats, renderBucketHtml, renderProductPage, PRODUCT_PATH };

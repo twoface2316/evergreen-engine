@@ -314,7 +314,7 @@ ${guides.buildLocateWidget()}
 ${layout.buildSearchWidget(searchMode, searchPayload)}
 <h2>When to Plant</h2>
 <ul class="link-grid">${popularLinks}</ul>
-<p><a href="${layout.escapeHtml(basePathLib.href('/plant/'))}">All ${crops.length} crops</a> &middot; <a href="${layout.escapeHtml(basePathLib.href('/zones/'))}">Frost dates by USDA hardiness zone</a></p>
+<p><a href="${layout.escapeHtml(basePathLib.href('/plant/'))}">All ${crops.length} crops</a> &middot; <a href="${layout.escapeHtml(basePathLib.href('/zones/'))}">Frost dates by USDA hardiness zone</a> &middot; <a href="${layout.escapeHtml(basePathLib.href(printables.PRODUCT_PATH))}">Printable planting calendar</a></p>
 ${GUIDES.length ? `<h2>Gardening Guides</h2>\n${articles.buildGuideLinks(GUIDES, GUIDES.map((g) => g.slug))}` : ''}
 <h2>Top 100 Cities by Population</h2>
 ${layout.buildTopCitiesTable(topCities)}
@@ -638,6 +638,8 @@ function runFull() {
   console.log(`  ZIP lookup: ${locate.mapped}/${locate.total} ZIPs mapped to a city within 150 km (${locate.shardCount} shards)`);
   const guideUrls = articles.renderGuides(cities, siteDir, GUIDES);
   console.log(`  guides: ${GUIDES.length} (+ index)`);
+  guideUrls.push(printables.renderProductPage(cities, siteDir, SITE_URL));
+  console.log('  printable calendar page: written');
 
   // --- 3. Homepage (incl. search index) -----------------------------------
   const { mode: searchMode, payload: searchPayload, bytes: searchBytes } = prepareSearchIndex(cities, siteDir);
