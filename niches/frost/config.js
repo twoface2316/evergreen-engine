@@ -35,7 +35,7 @@ module.exports = {
   //   searchUrl: 'https://www.trueleafmarket.com/search?q={q}',
   //   linkTemplate: '<network deep-link URL with {url}>' }
   affiliate: {
-    amazonTag: null,
+    amazonTag: 'frostcal-20',
     seedShop: null
   },
 
