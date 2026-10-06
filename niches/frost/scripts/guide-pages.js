@@ -326,9 +326,11 @@ ${buildCropLinkGrid(stateAbbr, crop.slug)}
 <h2>Related Guides</h2>
 <ul class="guide-list">
 ${copy.summaries.seedStart ? `<li><a href="${href('/guides/when-to-start-seeds-indoors/')}">When to start seeds indoors</a></li>
-<li><a href="${href('/guides/harden-off-seedlings/')}">How to harden off seedlings</a></li>` : ''}
+<li><a href="${href('/guides/harden-off-seedlings/')}">How to harden off seedlings</a></li>
+<li><a href="${href('/guides/grow-lights-for-seedlings/')}">How to choose a grow light for seedlings</a></li>` : ''}
 ${copy.summaries.fallPlanting ? `<li><a href="${href('/guides/fall-garden-planting/')}">Fall garden planting</a></li>` : ''}
 <li><a href="${href('/guides/protect-plants-from-frost/')}">How to protect plants from frost</a></li>
+<li><a href="${href('/guides/garden-thermometers/')}">Garden thermometers: soil temperature and frost alarms</a></li>
 </ul>`;
 
   return {

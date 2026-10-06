@@ -39,7 +39,12 @@ const GEAR = {
   'seed-garlic': { name: 'Seed garlic', q: 'seed garlic for planting', blurb: 'Plant cloves in fall, a few weeks before the ground freezes, for a summer harvest.' },
   'tomato-cages': { name: 'Tomato cages', q: 'heavy duty tomato cages', blurb: 'Set them at transplant time, before roots spread and plants sprawl.' },
   'trellis': { name: 'Trellis netting', q: 'garden trellis netting', blurb: 'Vertical support for peas, beans, and cucumbers; saves space and keeps fruit clean.' },
-  'grow-bags': { name: 'Potato grow bags', q: 'potato grow bags', blurb: 'Grow potatoes on a patio and harvest by tipping the bag out.' }
+  'grow-bags': { name: 'Potato grow bags', q: 'potato grow bags', blurb: 'Grow potatoes on a patio and harvest by tipping the bag out.' },
+  'snap-clamps': { name: 'Hoop snap clamps', q: 'greenhouse snap clamps for hoops', blurb: 'Clip row cover or plastic to hoops so wind can\'t pull it off.' },
+  'ratchet-hangers': { name: 'Adjustable light hangers', q: 'rope ratchet hangers grow light', blurb: 'Raise grow lights an inch at a time as seedlings grow.' },
+  'outlet-timer': { name: 'Outlet timer', q: 'outlet timer for grow lights', blurb: 'Runs grow lights 12–16 hours a day without you remembering.' },
+  'plant-labels': { name: 'Plant labels', q: 'plant labels garden markers', blurb: 'Tomato and pepper seedlings look identical; label every tray.' },
+  'nursery-pots': { name: '4-inch nursery pots', q: '4 inch plastic nursery pots', blurb: 'Room for tomatoes and peppers that outgrow their cells before planting day.' }
 };
 
 // Extra gear for specific crops, added ahead of the planting-method gear.
@@ -64,7 +69,11 @@ const GUIDE_GEAR = {
   'harden-off-seedlings': ['cold-frame', 'grow-light', 'frost-cloth'],
   'fall-garden-planting': ['seed-garlic', 'row-cover', 'hoops', 'cold-frame'],
   'how-frost-dates-work': ['min-max-thermometer', 'frost-alarm', 'frost-cloth'],
-  'hardiness-zones-vs-frost-dates': ['seed-garlic', 'min-max-thermometer', 'cold-frame']
+  'hardiness-zones-vs-frost-dates': ['seed-garlic', 'min-max-thermometer', 'cold-frame'],
+  'frost-cloth-vs-row-cover': ['frost-cloth', 'row-cover', 'hoops', 'snap-clamps'],
+  'grow-lights-for-seedlings': ['grow-light', 'ratchet-hangers', 'outlet-timer', 'seed-trays'],
+  'seed-starting-supplies': ['seed-trays', 'grow-light', 'heat-mat'],
+  'garden-thermometers': ['soil-thermometer', 'min-max-thermometer', 'frost-alarm', 'frost-cloth']
 };
 
 function enabled() {

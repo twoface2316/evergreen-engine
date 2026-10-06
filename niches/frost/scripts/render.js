@@ -63,8 +63,8 @@ let GUIDES = [];
 /** Guides most useful right now: fall frost and fall planting from August, seed starting from January. */
 function seasonalGuideSlugs() {
   return layout.seasonContext().season === 'fall'
-    ? ['protect-plants-from-frost', 'fall-garden-planting', 'how-frost-dates-work']
-    : ['when-to-start-seeds-indoors', 'harden-off-seedlings', 'how-frost-dates-work'];
+    ? ['protect-plants-from-frost', 'frost-cloth-vs-row-cover', 'fall-garden-planting', 'how-frost-dates-work']
+    : ['when-to-start-seeds-indoors', 'seed-starting-supplies', 'grow-lights-for-seedlings', 'harden-off-seedlings'];
 }
 
 const SITE_URL = process.env.SITE_URL || nicheConfig.defaultSiteUrl;
