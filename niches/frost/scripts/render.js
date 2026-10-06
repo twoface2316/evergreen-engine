@@ -51,6 +51,7 @@ const { renderCollection, countFilesRecursive } = require('../../../engine/lib/r
 const { validateBasicPage } = require('../../../engine/lib/html-validate.js');
 const nicheConfig = require('../config.js');
 const guides = require('./guide-pages.js');
+const { cityKey } = require('./06-folds.js');
 
 const SITE_URL = process.env.SITE_URL || nicheConfig.defaultSiteUrl;
 
@@ -78,6 +79,49 @@ function enrichCitiesWithZones(cities, dataDir) {
     if (city.zone) zonedCount++;
   }
   return { zonedCount };
+}
+
+// ---------------------------------------------------------------------
+// Neighborhood folding: data/folds.json (from scripts/06-folds.js) maps
+// neighborhood-level entries (Harlem, Koreatown) to the city they belong to.
+// Sets `city.foldInto` to the parent record. Keys use original slugs, so
+// this must also run before slug disambiguation.
+// ---------------------------------------------------------------------
+function applyFolds(cities, dataDir) {
+  const foldsPath = path.join(dataDir, 'folds.json');
+  if (!fs.existsSync(foldsPath)) return 0;
+  const folds = JSON.parse(fs.readFileSync(foldsPath, 'utf8'));
+  const byKey = new Map(cities.map((c) => [cityKey(c), c]));
+  let n = 0;
+  for (const city of cities) {
+    const parent = byKey.get(folds[cityKey(city)]);
+    if (parent && !parent.foldInto) {
+      city.foldInto = parent;
+      n++;
+    }
+  }
+  return n;
+}
+
+/** Instant redirect from a folded neighborhood URL to its parent city page. */
+function renderFoldRedirect(city) {
+  const parent = city.foldInto;
+  const target = basePathLib.href(`/${parent.stateSlug}/${parent.slug}/`);
+  const canonical = `${SITE_URL}/${parent.stateSlug}/${parent.slug}/`;
+  const label = `${parent.name}, ${parent.state}`;
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>${layout.escapeHtml(label)} frost dates</title>
+<link rel="canonical" href="${canonical}">
+<meta http-equiv="refresh" content="0; url=${target}">
+</head>
+<body>
+<p>${layout.escapeHtml(city.name)} is part of ${layout.escapeHtml(parent.name)}. See <a href="${target}">frost dates for ${layout.escapeHtml(label)}</a>.</p>
+</body>
+</html>
+`;
 }
 
 // ---------------------------------------------------------------------
@@ -162,6 +206,8 @@ function renderCityPage(cityRecord, allCities, crops) {
 <p>${layout.escapeHtml(buildLede(city))}</p>
 ${layout.buildSummaryBox(city)}
 ${layout.buildCountdownWidget(city)}
+<h2>How ${layout.escapeHtml(city.name)} Compares</h2>
+${layout.buildComparison(city, allCities)}
 <h2>Monthly Temperatures</h2>
 ${layout.buildChartCard(city)}
 <h2>Planting Calendar</h2>
@@ -320,6 +366,25 @@ ${layout.buildPrivacyBody(nicheConfig.contactEmail)}`;
   });
 }
 
+function renderAboutPage(cityCount) {
+  const title = 'About FrostCal: Free Frost Dates from NOAA Data';
+  const description = 'What FrostCal is, where its frost dates come from (NOAA 1991-2020 climate normals, USDA zones), how the site is maintained, and how to send corrections.';
+  const canonical = `${SITE_URL}/about/`;
+
+  const bodyHtml = `${layout.buildGenericBreadcrumbs([{ label: 'Home', href: '/' }, { label: 'About' }])}
+${layout.buildAboutBody(cityCount, nicheConfig.contactEmail)}`;
+
+  return buildPageShell({
+    title,
+    description,
+    canonical,
+    stylesheetHref: basePathLib.href('/style.css'),
+    headerHtml: layout.buildSiteHeader(),
+    bodyHtml,
+    footerHtml: layout.buildFooter()
+  });
+}
+
 function renderContactPage() {
   const title = 'Contact — FrostCal';
   const description = 'Contact FrostCal with questions, corrections, or feedback about frost dates and planting calendars.';
@@ -440,18 +505,20 @@ function runFull() {
   const templatesDir = path.join(__dirname, '..', 'templates');
   const siteDir = path.join(__dirname, '..', '..', '..', 'sites', 'frost');
 
-  const cities = require(path.join(dataDir, 'cities-frost.json'));
+  const allCities = require(path.join(dataDir, 'cities-frost.json'));
   const crops = require(path.join(dataDir, 'crops.json'));
 
-  console.log(`FrostCal Phase 4 full generation — ${cities.length} cities\n`);
+  console.log(`FrostCal Phase 4 full generation — ${allCities.length} places\n`);
   if (basePathLib.getBasePath()) console.log(`  base path: ${basePathLib.getBasePath()}`);
   console.log(`  site URL: ${SITE_URL}\n`);
   const startTime = Date.now();
 
   // Phase 5: attach USDA hardiness zone before any slug mutation (see
   // enrichCitiesWithZones header comment).
-  const { zonedCount } = enrichCitiesWithZones(cities, dataDir);
-  console.log(`  zones: ${zonedCount}/${cities.length} cities have a USDA hardiness zone (${((zonedCount / cities.length) * 100).toFixed(1)}%)`);
+  const { zonedCount } = enrichCitiesWithZones(allCities, dataDir);
+  console.log(`  zones: ${zonedCount}/${allCities.length} places have a USDA hardiness zone (${((zonedCount / allCities.length) * 100).toFixed(1)}%)`);
+  const foldCount = applyFolds(allCities, dataDir);
+  console.log(`  neighborhoods folded into their parent city: ${foldCount}`);
 
   // A handful of GeoNames entries share the same name within a state (e.g.
   // two distinct "Vincent, CA" places), which would otherwise collide on
@@ -461,10 +528,10 @@ function runFull() {
   // This mutates the shared in-memory `cities` array before any rendering,
   // so every downstream link (nearby cities, state table, sitemap, search
   // index) stays consistent with the disambiguated slug.
-  cities.sort((a, b) => (b.population || 0) - (a.population || 0));
+  allCities.sort((a, b) => (b.population || 0) - (a.population || 0));
   const seenSlugs = new Map(); // "stateSlug/slug" -> count
   let slugCollisions = 0;
-  for (const city of cities) {
+  for (const city of allCities) {
     const key = `${city.stateSlug}/${city.slug}`;
     const n = (seenSlugs.get(key) || 0) + 1;
     seenSlugs.set(key, n);
@@ -475,6 +542,12 @@ function runFull() {
       slugCollisions++;
     }
   }
+
+  // Everything below renders real cities only; folded neighborhoods just
+  // get a redirect stub at their old URL.
+  const cities = allCities.filter((c) => !c.foldInto);
+  const folded = allCities.filter((c) => c.foldInto);
+  layout.setCropGuideStates(new Set(cities.filter((c) => !c.frostFree).map((c) => c.state)));
 
   fs.mkdirSync(siteDir, { recursive: true });
   fs.copyFileSync(path.join(templatesDir, 'style.css'), path.join(siteDir, 'style.css'));
@@ -509,6 +582,13 @@ function runFull() {
     label: 'city pages'
   });
 
+  for (const city of folded) {
+    const dir = path.join(siteDir, city.stateSlug, city.slug);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'index.html'), renderFoldRedirect(city), 'utf8');
+  }
+  console.log(`  neighborhood redirects: ${folded.length}`);
+
   // --- 2. State index pages -----------------------------------------------
   const stateGroups = new Map(); // stateAbbr -> cities[]
   for (const city of cities) {
@@ -535,7 +615,7 @@ function runFull() {
   const calIndex = guides.buildCalendarIndex(cities);
   const cropUrls = guides.renderCropPages(cities, calIndex, siteDir);
   console.log(`  crop guide pages: ${cropUrls.length}`);
-  const locate = guides.writeLocateData(cities, siteDir, path.join(dataDir, 'zipcodes.csv'));
+  const locate = guides.writeLocateData(allCities, siteDir, path.join(dataDir, 'zipcodes.csv'));
   console.log(`  ZIP lookup: ${locate.mapped}/${locate.total} ZIPs mapped to a city within 150 km (${locate.shardCount} shards)`);
 
   // --- 3. Homepage (incl. search index) -----------------------------------
@@ -551,7 +631,7 @@ function runFull() {
   fs.writeFileSync(path.join(methodologyDir, 'index.html'), renderMethodologyPage(), 'utf8');
   console.log('  methodology page: written');
 
-  for (const [dir, renderFn] of [['privacy', renderPrivacyPage], ['contact', renderContactPage]]) {
+  for (const [dir, renderFn] of [['about', () => renderAboutPage(cities.length)], ['privacy', renderPrivacyPage], ['contact', renderContactPage]]) {
     const pageDir = path.join(siteDir, dir);
     fs.mkdirSync(pageDir, { recursive: true });
     fs.writeFileSync(path.join(pageDir, 'index.html'), renderFn(), 'utf8');
@@ -559,7 +639,7 @@ function runFull() {
   }
 
   // --- 5. sitemap.xml, robots.txt, 404.html --------------------------------
-  const urls = ['/', '/methodology/', '/privacy/', '/contact/'];
+  const urls = ['/', '/about/', '/methodology/', '/privacy/', '/contact/'];
   for (const { stateSlug } of statesMeta) urls.push(`/${stateSlug}/`);
   urls.push(...zoneUrls, ...cropUrls);
   for (const city of cities) urls.push(`/${city.stateSlug}/${city.slug}/`);
@@ -574,8 +654,8 @@ function runFull() {
   const totalFiles = countFilesRecursive(siteDir);
 
   console.log('\n=== FrostCal Phase 4 generation report ===');
-  console.log(`City pages:  ${cityOk} OK / ${cityErrors.length} failed (of ${cities.length})`);
-  console.log(`USDA zones:  ${zonedCount}/${cities.length} (${((zonedCount / cities.length) * 100).toFixed(1)}%)`);
+  console.log(`City pages:  ${cityOk} OK / ${cityErrors.length} failed (of ${cities.length}); ${folded.length} neighborhoods redirect to their city`);
+  console.log(`USDA zones:  ${zonedCount}/${allCities.length} (${((zonedCount / allCities.length) * 100).toFixed(1)}%)`);
   if (cityErrors.length > 0) {
     console.log('  Errors:');
     for (const e of cityErrors.slice(0, 20)) console.log(`   - ${e.item.name}, ${e.item.state}: ${e.error}`);

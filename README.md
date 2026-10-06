@@ -12,7 +12,8 @@ Live: https://frostcal.com/
 engine/            Niche-agnostic tooling (link checker, shared libs)
 niches/frost/      Frost niche
   config.js        Site title, URL defaults, niche settings
-  scripts/         Data pipeline (download, build, zones) + render
+  scripts/         Data pipeline (download, build, zones, folds) + render
+                   06-folds.js: neighborhoods (Harlem, Koreatown) -> parent city, writes data/folds.json
                    render.js: city, state, home, static pages
                    guide-pages.js: zone pages, crop-by-state guides, ZIP lookup data
   templates/       Page layout + stylesheet

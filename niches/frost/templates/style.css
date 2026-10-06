@@ -535,3 +535,10 @@ table.calendar.compact td { white-space: normal; }
   table.calendar.compact { font-size: 0.85rem; }
   table.calendar.compact td, table.calendar.compact th { padding: 7px 6px; }
 }
+
+/* ---------- city comparison facts ---------- */
+.compare-list {
+  margin: 0 0 8px;
+  padding-left: 1.2em;
+}
+.compare-list li { margin-bottom: 6px; }

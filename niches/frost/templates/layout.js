@@ -545,7 +545,7 @@ function buildFooter() {
   <p>Frost and temperature normals: <a href="https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals" rel="noopener">NOAA NCEI 1991–2020 U.S. Climate Normals</a>.</p>
   <p>City and place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.</p>
   <p><a href="${escapeHtml(url('/'))}">Frost dates by ZIP code</a> &middot; <a href="${escapeHtml(url('/zones/'))}">Hardiness zones</a> &middot; <a href="${escapeHtml(url('/plant/'))}">When to plant</a></p>
-  <p><a href="${escapeHtml(url('/methodology/'))}">How these dates are calculated (methodology)</a> &middot; <a href="${escapeHtml(url('/privacy/'))}">Privacy policy</a> &middot; <a href="${escapeHtml(url('/contact/'))}">Contact</a></p>
+  <p><a href="${escapeHtml(url('/methodology/'))}">How these dates are calculated (methodology)</a> &middot; <a href="${escapeHtml(url('/about/'))}">About</a> &middot; <a href="${escapeHtml(url('/privacy/'))}">Privacy policy</a> &middot; <a href="${escapeHtml(url('/contact/'))}">Contact</a></p>
   <p>&copy; ${year} FrostCal.</p>
 </footer>`;
 }
@@ -644,9 +644,23 @@ function buildStateLede(name, stateCities) {
   return `In ${name}, the average last spring frost ranges from ${formatDateLong(r.lastEarly.lastSpringFrost.p50)} in ${r.lastEarly.name} to ${formatDateLong(r.lastLate.lastSpringFrost.p50)} in ${r.lastLate.name}, and the average first fall frost from ${formatDateLong(r.firstEarly.firstFallFrost.p50)} in ${r.firstEarly.name} to ${formatDateLong(r.firstLate.firstFallFrost.p50)} in ${r.firstLate.name}. Pick a city for its full frost-date summary and 42-crop planting calendar.`;
 }
 
-/** Crop guide link: the crop's page for a state, or the all-states hub when there is no state (zone pages). */
+// States that get crop-by-state guide pages: those with at least one city
+// that sees frost. Entirely frost-free states (Hawaii) would get 42 pages
+// saying the same thing, so their links point at the all-states crop hubs.
+// Set once per build by render.js; null means "every state".
+let cropGuideStates = null;
+
+function setCropGuideStates(states) {
+  cropGuideStates = states;
+}
+
+function hasCropGuide(stateAbbr) {
+  return !!stateAbbr && (!cropGuideStates || cropGuideStates.has(stateAbbr));
+}
+
+/** Crop guide link: the crop's page for a state, or the all-states hub when the state has no guides (zone pages, Hawaii). */
 function cropGuidePath(cropSlug, stateAbbr) {
-  return stateAbbr ? `/plant/${cropSlug}/${stateNameSlug(stateAbbr)}/` : `/plant/${cropSlug}/`;
+  return hasCropGuide(stateAbbr) ? `/plant/${cropSlug}/${stateNameSlug(stateAbbr)}/` : `/plant/${cropSlug}/`;
 }
 
 /** URL slug for a state's full name, e.g. "NC" -> "north-carolina" (used by crop guide URLs). */
@@ -857,6 +871,126 @@ function build404Body() {
 <p><a href="${escapeHtml(url('/'))}">Go to the homepage</a> or use the search box there to find a city's frost dates and planting calendar.</p>`;
 }
 
+/** Day of year (0-364, non-leap) for a "2001-MM-DD" string, or null. */
+function dayOfYear(str) {
+  const md = parseMonthDay(str);
+  return md ? Math.round((Date.UTC(2001, md.month - 1, md.day) - Date.UTC(2001, 0, 1)) / 86400000) : null;
+}
+
+function daysPhrase(n) {
+  return `${n} day${n === 1 ? '' : 's'}`;
+}
+
+/**
+ * "How {city} compares": facts that set this city apart from the rest of its
+ * state and from the nearest larger city, all computed from the same NOAA
+ * normals shown elsewhere on the page.
+ */
+function buildComparison(city, allCities) {
+  const items = [];
+  const name = city.name;
+  const state = stateName(city.state);
+  const sameState = allCities.filter((c) => c.state === city.state && c !== city);
+
+  if (!city.frostFree) {
+    const myLast = dayOfYear(city.lastSpringFrost.p50);
+    const myFirst = dayOfYear(city.firstFallFrost.p50);
+    const frosty = sameState.filter((c) => !c.frostFree);
+
+    if (frosty.length >= 5) {
+      const earlier = frosty.filter((c) => dayOfYear(c.lastSpringFrost.p50) < myLast).length;
+      const later = frosty.filter((c) => dayOfYear(c.lastSpringFrost.p50) > myLast).length;
+      const total = frosty.length + 1;
+      const lastLabel = formatDateShort(city.lastSpringFrost.p50);
+      if (later >= earlier) {
+        items.push(`${name}'s typical last spring frost (${lastLabel}) comes earlier than in ${Math.round((100 * later) / total)}% of the ${total} ${state} cities we track.`);
+      } else {
+        items.push(`${name}'s typical last spring frost (${lastLabel}) comes later than in ${Math.round((100 * earlier) / total)}% of the ${total} ${state} cities we track.`);
+      }
+
+      const seasons = frosty.map((c) => c.growingSeasonDays).filter((d) => d != null).sort((a, b) => a - b);
+      if (seasons.length && city.growingSeasonDays != null) {
+        const median = seasons[Math.floor(seasons.length / 2)];
+        const diff = city.growingSeasonDays - median;
+        items.push(Math.abs(diff) < 3
+          ? `Its ${city.growingSeasonDays}-day growing season is about the same as the ${state} median of ${median} days.`
+          : `Its ${city.growingSeasonDays}-day growing season is ${daysPhrase(Math.abs(diff))} ${diff > 0 ? 'longer' : 'shorter'} than the ${state} median of ${median} days.`);
+      }
+    }
+
+    let bigger = null;
+    let biggerKm = Infinity;
+    for (const c of frosty) {
+      if ((c.population || 0) <= (city.population || 0)) continue;
+      const km = haversineKm(city.lat, city.lon, c.lat, c.lon);
+      if (km < biggerKm && km <= 100) { bigger = c; biggerKm = km; }
+    }
+    if (bigger) {
+      const dLast = myLast - dayOfYear(bigger.lastSpringFrost.p50);
+      const dFirst = myFirst - dayOfYear(bigger.firstFallFrost.p50);
+      const km = Math.round(biggerKm);
+      if (dLast === 0 && dFirst === 0) {
+        items.push(bigger.station && city.station && bigger.station.id === city.station.id
+          ? `${name} shares its NOAA weather station with ${bigger.name} (${km} km away), so their typical frost dates are the same.`
+          : `${name}'s typical frost dates match ${bigger.name}'s (${km} km away).`);
+      } else {
+        const lastPart = dLast === 0 ? 'on the same day as' : `${daysPhrase(Math.abs(dLast))} ${dLast > 0 ? 'later than' : 'earlier than'}`;
+        const firstPart = dFirst === 0 ? 'on the same day' : `${daysPhrase(Math.abs(dFirst))} ${dFirst > 0 ? 'later' : 'earlier'}`;
+        items.push(`Compared with ${bigger.name} (${km} km away), ${name}'s last spring frost comes ${lastPart} ${bigger.name}'s, and its first fall frost arrives ${firstPart}.`);
+      }
+    }
+  } else {
+    const frostFreeCount = sameState.filter((c) => c.frostFree).length;
+    if (frostFreeCount > 0) {
+      items.push(`${name} is one of ${frostFreeCount + 1} essentially frost-free ${state} cities we track.`);
+    }
+  }
+
+  const m = city.monthly;
+  if (m && Array.isArray(m.tmax) && Array.isArray(m.tmin) && m.tmax.length === 12 && m.tmin.length === 12) {
+    let hot = 0;
+    let cold = 0;
+    for (let i = 1; i < 12; i++) {
+      if (m.tmax[i] > m.tmax[hot]) hot = i;
+      if (m.tmin[i] < m.tmin[cold]) cold = i;
+    }
+    items.push(`${MONTH_NAMES[hot]} is the warmest month (average high ${Math.round(m.tmax[hot])}°F) and ${MONTH_NAMES[cold]} the coldest (average low ${Math.round(m.tmin[cold])}°F).`);
+  }
+
+  if (!items.length) return '';
+  return `<ul class="compare-list">${items.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul>`;
+}
+
+/** About page body. Deliberately anonymous: describes the project, not a person. */
+function buildAboutBody(cityCount, contactEmail) {
+  const n = cityCount.toLocaleString('en-US');
+  return `<div class="methodology">
+<h1>About FrostCal</h1>
+<p class="lede">FrostCal is a free reference for frost dates and planting dates across ${n} US cities. Look up any ZIP code or city to see when frost typically ends in spring and returns in fall, with no account and no app required.</p>
+
+<h2>Why it exists</h2>
+<p>Most frost-date tools give a single date and stop there. A single date hides the part gardeners actually need: how much risk you're taking by planting on it. FrostCal shows three dates for every location: a typical date, a safer date, and a riskier one. Each comes from 30 years of weather records, so you can decide how much risk to take with tender plants.</p>
+
+<h2>Where the data comes from</h2>
+<ul>
+<li><strong>Frost dates and temperatures:</strong> NOAA National Centers for Environmental Information, 1991&ndash;2020 U.S. Climate Normals. Every city page names the weather station it uses and how far away it is.</li>
+<li><strong>Hardiness zones:</strong> the USDA 2023 Plant Hardiness Zone Map.</li>
+<li><strong>Places:</strong> GeoNames, used under CC BY 4.0.</li>
+<li><strong>Planting windows:</strong> timing rules for 42 crops based on university extension guidelines, applied to each city's own frost dates.</li>
+</ul>
+<p>The <a href="${escapeHtml(url('/methodology/'))}">methodology page</a> explains how stations are matched to cities and how the probability ranges work.</p>
+
+<h2>How the site is maintained</h2>
+<p>Pages are generated directly from the data above, so every city uses the same method and nothing is copied by hand. The site is rebuilt monthly. The underlying climate normals are revised by NOAA once a decade; the next release (2001&ndash;2030) will be adopted when it's published.</p>
+
+<h2>Independence</h2>
+<p>FrostCal is an independent project. It is not affiliated with NOAA, the USDA, or any seed or garden company. The site is free to use and is supported by advertising.</p>
+
+<h2>Corrections</h2>
+<p>If a date looks wrong for your area, or your town is missing, email <a href="mailto:${escapeHtml(contactEmail)}">${escapeHtml(contactEmail)}</a>. Microclimates are real: a valley, a hilltop, or a spot near a large lake can differ from the nearest station by a week or more, and reports like that help improve the site.</p>
+</div>`;
+}
+
 /** Privacy policy page body (reuses .methodology prose styling). */
 function buildPrivacyBody(contactEmail) {
   return `<div class="methodology">
@@ -916,6 +1050,11 @@ module.exports = {
   stateFrostRanges,
   buildStateLede,
   stateNameSlug,
+  setCropGuideStates,
+  hasCropGuide,
+  cropGuidePath,
+  buildComparison,
+  buildAboutBody,
   buildSummaryBox,
   buildZoneCopy,
   buildCountdownWidget,

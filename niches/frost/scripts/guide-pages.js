@@ -196,13 +196,9 @@ function cityLink(c) {
 // ---------------------------------------------------------------------
 
 function buildCropLinkGrid(stateAbbr, excludeSlug) {
-  const stateSlugFull = stateAbbr ? layout.stateNameSlug(stateAbbr) : null;
   const items = crops
     .filter((c) => c.slug !== excludeSlug)
-    .map((c) => {
-      const target = stateSlugFull ? `/plant/${c.slug}/${stateSlugFull}/` : `/plant/${c.slug}/`;
-      return `<li><a href="${href(target)}">${escapeHtml(cropTitle(c))}</a></li>`;
-    })
+    .map((c) => `<li><a href="${href(layout.cropGuidePath(c.slug, stateAbbr))}">${escapeHtml(cropTitle(c))}</a></li>`)
     .join('');
   return `<ul class="link-grid">${items}</ul>`;
 }
@@ -404,6 +400,7 @@ function renderCropPages(cities, calIndex, siteDir) {
   for (const crop of crops) {
     const stateRows = [];
     for (const [abbr, group] of byState) {
+      if (!layout.hasCropGuide(abbr)) continue;
       const page = renderCropStatePage(crop, abbr, group, calIndex);
       writePage(siteDir, page.path, page.html);
       urls.push(page.path);
@@ -543,17 +540,26 @@ function renderZonePages(cities, siteDir) {
  * Writes /zip/{zip3}.json ({ "60601": "il/chicago", ... }) mapping every ZIP
  * centroid to its nearest city page within 150 km, and /geo/cities.json
  * ([[lat, lon, "il/chicago"], ...]) for browser geolocation.
+ *
+ * `places` includes folded neighborhoods: matching against them and then
+ * resolving to their parent keeps a Harlem ZIP on New York City instead of
+ * the nearest remaining page (which can be across a state line). When the
+ * ZIP's state is known, cities in that state win over closer out-of-state ones.
  */
-function writeLocateData(cities, siteDir, zipCsvPath) {
+function writeLocateData(places, siteDir, zipCsvPath) {
+  const pagePath = (c) => {
+    const target = c.foldInto || c;
+    return `${target.stateSlug}/${target.slug}`;
+  };
   const cell = (lat, lon) => `${Math.floor(lat)},${Math.floor(lon)}`;
   const grid = new Map();
-  for (const c of cities) {
+  for (const c of places) {
     const k = cell(c.lat, c.lon);
     if (!grid.has(k)) grid.set(k, []);
     grid.get(k).push(c);
   }
 
-  function nearest(lat, lon) {
+  function nearest(lat, lon, state) {
     let best = null;
     let bestKm = Infinity;
     for (let r = 0; r <= 2; r++) {
@@ -563,6 +569,7 @@ function writeLocateData(cities, siteDir, zipCsvPath) {
           const bucket = grid.get(cell(lat + dy, lon + dx));
           if (!bucket) continue;
           for (const c of bucket) {
+            if (state && c.state !== state) continue;
             const km = layout.haversineKm(lat, lon, c.lat, c.lon);
             if (km < bestKm) { bestKm = km; best = c; }
           }
@@ -578,15 +585,17 @@ function writeLocateData(cities, siteDir, zipCsvPath) {
   let total = 0;
   const lines = fs.readFileSync(zipCsvPath, 'utf8').split(/\r?\n/).slice(1);
   for (const line of lines) {
-    const [zip, latS, lonS] = line.split(',');
+    const [zip, latS, lonS, state] = line.split(',');
     if (!/^\d{5}$/.test(zip || '')) continue;
     total++;
-    const c = nearest(parseFloat(latS), parseFloat(lonS));
+    const lat = parseFloat(latS);
+    const lon = parseFloat(lonS);
+    const c = (state && nearest(lat, lon, state)) || nearest(lat, lon, null);
     if (!c) continue;
     mapped++;
     const key = zip.slice(0, 3);
     if (!shards.has(key)) shards.set(key, {});
-    shards.get(key)[zip] = `${c.stateSlug}/${c.slug}`;
+    shards.get(key)[zip] = pagePath(c);
   }
 
   const zipDir = path.join(siteDir, 'zip');
@@ -598,7 +607,7 @@ function writeLocateData(cities, siteDir, zipCsvPath) {
 
   const geoDir = path.join(siteDir, 'geo');
   fs.mkdirSync(geoDir, { recursive: true });
-  const geo = cities.map((c) => [Math.round(c.lat * 1000) / 1000, Math.round(c.lon * 1000) / 1000, `${c.stateSlug}/${c.slug}`]);
+  const geo = places.map((c) => [Math.round(c.lat * 1000) / 1000, Math.round(c.lon * 1000) / 1000, pagePath(c)]);
   fs.writeFileSync(path.join(geoDir, 'cities.json'), JSON.stringify(geo), 'utf8');
 
   return { mapped, total, shardCount: shards.size };
