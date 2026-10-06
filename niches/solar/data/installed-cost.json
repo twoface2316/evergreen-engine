@@ -1,0 +1,13 @@
+{
+  "source": "Berkeley Lab, U.S. Distributed Solar and Storage Data: 2026 Data Update (systems installed in 2025), host-owned stand-alone residential PV, median installed price before incentives",
+  "sourceUrl": "https://emp.lbl.gov/tracking-the-sun",
+  "dataYear": 2025,
+  "units": "2025 dollars per watt DC",
+  "us": { "allHostOwned": 3.6, "cashPurchase": 3.0, "loanFinanced": 4.5 },
+  "states": {
+    "WA": 3.0, "AZ": 3.1, "FL": 3.1, "CT": 3.3, "CA": 3.3, "MA": 3.4,
+    "OR": 3.4, "RI": 3.5, "NH": 3.7, "NJ": 3.7, "WI": 3.9, "NY": 3.9,
+    "MD": 4.0, "TX": 4.0, "NC": 4.1, "NM": 4.1
+  },
+  "note": "States not listed had fewer than 20 observations in the Berkeley Lab sample; pages fall back to the US median."
+}

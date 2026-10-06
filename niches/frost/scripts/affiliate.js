@@ -30,7 +30,26 @@ const GEAR = {
   'seed-trays': { name: 'Seed starting trays with domes', q: 'seed starting trays humidity dome', blurb: 'Cell trays plus humidity domes for starting seeds indoors before your last frost.' },
   'heat-mat': { name: 'Seedling heat mat', q: 'seedling heat mat thermostat', blurb: 'Warm soil speeds germination of tomatoes, peppers, and eggplant by days.' },
   'grow-light': { name: 'LED grow light', q: 'led grow light seedlings', blurb: 'Keeps indoor seedlings stocky instead of leggy; a window alone is rarely enough.' },
-  'soil-thermometer': { name: 'Soil thermometer', q: 'soil thermometer gardening', blurb: 'Tells you when soil is warm enough to sow, which matters as much as the frost date.' }
+  'soil-thermometer': { name: 'Soil thermometer', q: 'soil thermometer gardening', blurb: 'Tells you when soil is warm enough to sow, which matters as much as the frost date.' },
+  'seed-mix': { name: 'Seed starting mix', q: 'seed starting mix', blurb: 'Sterile, fine-textured mix that drains well; garden soil compacts in small cells.' },
+  'water-wall': { name: 'Water-filled plant protectors', q: 'wall of water plant protector', blurb: 'Rings of water around early tomatoes soak up daytime heat and release it overnight.' },
+  'hoops': { name: 'Low tunnel hoops', q: 'garden hoops for row cover', blurb: 'Hold row cover or plastic off plants to turn a bed into a low tunnel.' },
+  'clip-fan': { name: 'Small clip-on fan', q: 'small clip on fan', blurb: 'A gentle breeze over seedlings builds sturdy stems and helps prevent damping-off.' },
+  'min-max-thermometer': { name: 'Min/max garden thermometer', q: 'min max thermometer outdoor garden', blurb: 'Records the overnight low at plant height so you learn how your garden compares to the forecast.' },
+  'seed-garlic': { name: 'Seed garlic', q: 'seed garlic for planting', blurb: 'Plant cloves in fall, a few weeks before the ground freezes, for a summer harvest.' },
+  'tomato-cages': { name: 'Tomato cages', q: 'heavy duty tomato cages', blurb: 'Set them at transplant time, before roots spread and plants sprawl.' },
+  'trellis': { name: 'Trellis netting', q: 'garden trellis netting', blurb: 'Vertical support for peas, beans, and cucumbers; saves space and keeps fruit clean.' },
+  'grow-bags': { name: 'Potato grow bags', q: 'potato grow bags', blurb: 'Grow potatoes on a patio and harvest by tipping the bag out.' }
+};
+
+// Extra gear for specific crops, added ahead of the planting-method gear.
+const CROP_EXTRAS = {
+  tomato: ['tomato-cages'],
+  cucumber: ['trellis'],
+  pea: ['trellis'],
+  'green-bean': ['trellis'],
+  potato: ['grow-bags'],
+  'sweet-potato': ['grow-bags']
 };
 
 const SEASON_GEAR = {
@@ -39,11 +58,13 @@ const SEASON_GEAR = {
 };
 
 const GUIDE_GEAR = {
-  'protect-plants-from-frost': ['frost-cloth', 'row-cover', 'frost-alarm', 'cold-frame'],
-  'frost-vs-freeze': ['frost-cloth', 'frost-alarm', 'row-cover'],
-  'when-to-start-seeds-indoors': ['seed-trays', 'heat-mat', 'grow-light', 'soil-thermometer'],
+  'protect-plants-from-frost': ['frost-cloth', 'row-cover', 'water-wall', 'hoops', 'frost-alarm', 'cold-frame'],
+  'frost-vs-freeze': ['frost-cloth', 'frost-alarm', 'row-cover', 'cold-frame'],
+  'when-to-start-seeds-indoors': ['seed-trays', 'seed-mix', 'heat-mat', 'grow-light', 'clip-fan'],
   'harden-off-seedlings': ['cold-frame', 'grow-light', 'frost-cloth'],
-  'fall-garden-planting': ['row-cover', 'cold-frame', 'frost-cloth']
+  'fall-garden-planting': ['seed-garlic', 'row-cover', 'hoops', 'cold-frame'],
+  'how-frost-dates-work': ['min-max-thermometer', 'frost-alarm', 'frost-cloth'],
+  'hardiness-zones-vs-frost-dates': ['seed-garlic', 'min-max-thermometer', 'cold-frame']
 };
 
 function enabled() {
@@ -79,9 +100,10 @@ function seedItem(crop, cropPlural) {
 
 /** Gear keys that fit how a crop is planted. */
 function cropGearKeys(crop) {
-  if (crop.method === 'indoor-start') return ['seed-trays', 'grow-light', 'frost-cloth'];
-  if (crop.fallPlanting) return ['row-cover', 'soil-thermometer'];
-  return ['soil-thermometer', 'frost-cloth'];
+  const extras = CROP_EXTRAS[crop.slug] || [];
+  if (crop.method === 'indoor-start') return [...extras, 'seed-trays', 'grow-light', 'frost-cloth'];
+  if (crop.fallPlanting) return [...extras, 'row-cover', 'soil-thermometer'];
+  return [...extras, 'soil-thermometer', 'frost-cloth'];
 }
 
 function box(heading, items) {
@@ -122,6 +144,22 @@ function buildGuideBox(slug) {
   return keys ? box('Supplies mentioned in this guide', keys.map(gearItem)) : buildSeasonBox();
 }
 
+/**
+ * In-text link for guide prose: {{gear:key|anchor text}}. With affiliates
+ * off it renders the anchor text alone, so guides read the same either way.
+ */
+function inlineLink(key, textHtml) {
+  if (!GEAR[key]) throw new Error(`unknown gear key "${key}"`);
+  const item = gearItem(key);
+  return item ? `<a href="${escapeHtml(item.url)}" rel="sponsored nofollow noopener" target="_blank">${textHtml}</a>` : textHtml;
+}
+
+/** Notice shown above guide text that contains in-text affiliate links. */
+function inlineDisclosure() {
+  if (!cfg.amazonTag) return '';
+  return `<p class="gear-note">${escapeHtml(disclosureText(true))}</p>`;
+}
+
 /** One-line footer disclosure, '' when no affiliate program is configured. */
 function footerDisclosure() {
   if (!enabled()) return '';
@@ -130,4 +168,4 @@ function footerDisclosure() {
     : 'Some links are affiliate links: FrostCal earns a commission from qualifying purchases.';
 }
 
-module.exports = { enabled, buildSeasonBox, buildCropBox, buildGuideBox, footerDisclosure, GEAR };
+module.exports = { enabled, buildSeasonBox, buildCropBox, buildGuideBox, footerDisclosure, inlineLink, inlineDisclosure, GEAR };

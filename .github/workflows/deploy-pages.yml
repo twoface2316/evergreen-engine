@@ -7,6 +7,9 @@ name: Build and deploy frost site
 on:
   push:
     branches: [main]
+    # Other niches deploy elsewhere (solar: Cloudflare Pages).
+    paths-ignore:
+      - 'niches/solar/**'
   schedule:
     - cron: '17 9 1 * *'
   workflow_dispatch:

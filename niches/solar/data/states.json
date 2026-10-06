@@ -1,0 +1,263 @@
+{
+ "priceSource": "EIA Electric Power Monthly, Table 5.6.B (residential, year-to-date through July 2026)",
+ "priceAsOf": "July 2026",
+ "usageSource": "EIA 2024 Average Monthly Bill - Residential (Form EIA-861)",
+ "usageYear": "2024",
+ "states": {
+  "AL": {
+   "priceCents": 16.54,
+   "monthlyKwh": 1143,
+   "monthlyBill": 173.5
+  },
+  "AK": {
+   "priceCents": 27.09,
+   "monthlyKwh": 578,
+   "monthlyBill": 143.54
+  },
+  "AZ": {
+   "priceCents": 15.44,
+   "monthlyKwh": 1075,
+   "monthlyBill": 160.24
+  },
+  "AR": {
+   "priceCents": 13.61,
+   "monthlyKwh": 1048,
+   "monthlyBill": 129.13
+  },
+  "CA": {
+   "priceCents": 33.25,
+   "monthlyKwh": 503,
+   "monthlyBill": 160.86
+  },
+  "CO": {
+   "priceCents": 16.72,
+   "monthlyKwh": 674,
+   "monthlyBill": 100.57
+  },
+  "CT": {
+   "priceCents": 27.97,
+   "monthlyKwh": 695,
+   "monthlyBill": 199.66
+  },
+  "DE": {
+   "priceCents": 17.86,
+   "monthlyKwh": 911,
+   "monthlyBill": 150.87
+  },
+  "DC": {
+   "priceCents": 24.66,
+   "monthlyKwh": 639,
+   "monthlyBill": 113.23
+  },
+  "FL": {
+   "priceCents": 15.3,
+   "monthlyKwh": 1104,
+   "monthlyBill": 156.09
+  },
+  "GA": {
+   "priceCents": 15.4,
+   "monthlyKwh": 1074,
+   "monthlyBill": 151.25
+  },
+  "HI": {
+   "priceCents": 46.28,
+   "monthlyKwh": 495,
+   "monthlyBill": 212.12
+  },
+  "ID": {
+   "priceCents": 12.96,
+   "monthlyKwh": 944,
+   "monthlyBill": 108.73
+  },
+  "IL": {
+   "priceCents": 19.22,
+   "monthlyKwh": 693,
+   "monthlyBill": 109.99
+  },
+  "IN": {
+   "priceCents": 17.04,
+   "monthlyKwh": 901,
+   "monthlyBill": 133.06
+  },
+  "IA": {
+   "priceCents": 14.2,
+   "monthlyKwh": 832,
+   "monthlyBill": 111.54
+  },
+  "KS": {
+   "priceCents": 15.21,
+   "monthlyKwh": 876,
+   "monthlyBill": 123.9
+  },
+  "KY": {
+   "priceCents": 14.27,
+   "monthlyKwh": 1047,
+   "monthlyBill": 133.81
+  },
+  "LA": {
+   "priceCents": 13.35,
+   "monthlyKwh": 1202,
+   "monthlyBill": 140.96
+  },
+  "ME": {
+   "priceCents": 29.99,
+   "monthlyKwh": 550,
+   "monthlyBill": 133.6
+  },
+  "MD": {
+   "priceCents": 21.3,
+   "monthlyKwh": 929,
+   "monthlyBill": 165.87
+  },
+  "MA": {
+   "priceCents": 30.14,
+   "monthlyKwh": 570,
+   "monthlyBill": 167.2
+  },
+  "MI": {
+   "priceCents": 21.53,
+   "monthlyKwh": 618,
+   "monthlyBill": 119.31
+  },
+  "MN": {
+   "priceCents": 16.25,
+   "monthlyKwh": 712,
+   "monthlyBill": 110.06
+  },
+  "MS": {
+   "priceCents": 15.19,
+   "monthlyKwh": 1156,
+   "monthlyBill": 154.83
+  },
+  "MO": {
+   "priceCents": 13.96,
+   "monthlyKwh": 1001,
+   "monthlyBill": 129.18
+  },
+  "MT": {
+   "priceCents": 13.95,
+   "monthlyKwh": 852,
+   "monthlyBill": 107.91
+  },
+  "NE": {
+   "priceCents": 12.9,
+   "monthlyKwh": 956,
+   "monthlyBill": 110.28
+  },
+  "NV": {
+   "priceCents": 13.53,
+   "monthlyKwh": 930,
+   "monthlyBill": 139.39
+  },
+  "NH": {
+   "priceCents": 26.79,
+   "monthlyKwh": 619,
+   "monthlyBill": 144.87
+  },
+  "NJ": {
+   "priceCents": 23.98,
+   "monthlyKwh": 662,
+   "monthlyBill": 128.13
+  },
+  "NM": {
+   "priceCents": 15.08,
+   "monthlyKwh": 654,
+   "monthlyBill": 92.88
+  },
+  "NY": {
+   "priceCents": 29.38,
+   "monthlyKwh": 571,
+   "monthlyBill": 139.53
+  },
+  "NC": {
+   "priceCents": 14.94,
+   "monthlyKwh": 1015,
+   "monthlyBill": 143.5
+  },
+  "ND": {
+   "priceCents": 12.36,
+   "monthlyKwh": 1029,
+   "monthlyBill": 118.38
+  },
+  "OH": {
+   "priceCents": 18.7,
+   "monthlyKwh": 846,
+   "monthlyBill": 135.16
+  },
+  "OK": {
+   "priceCents": 13.58,
+   "monthlyKwh": 1079,
+   "monthlyBill": 132.05
+  },
+  "OR": {
+   "priceCents": 15.4,
+   "monthlyKwh": 882,
+   "monthlyBill": 129.62
+  },
+  "PA": {
+   "priceCents": 21.04,
+   "monthlyKwh": 817,
+   "monthlyBill": 145.17
+  },
+  "RI": {
+   "priceCents": 29.22,
+   "monthlyKwh": 567,
+   "monthlyBill": 162.4
+  },
+  "SC": {
+   "priceCents": 15.93,
+   "monthlyKwh": 1050,
+   "monthlyBill": 149.51
+  },
+  "SD": {
+   "priceCents": 14.5,
+   "monthlyKwh": 994,
+   "monthlyBill": 127.81
+  },
+  "TN": {
+   "priceCents": 13.87,
+   "monthlyKwh": 1154,
+   "monthlyBill": 143.32
+  },
+  "TX": {
+   "priceCents": 16.06,
+   "monthlyKwh": 1096,
+   "monthlyBill": 163.72
+  },
+  "UT": {
+   "priceCents": 13.16,
+   "monthlyKwh": 774,
+   "monthlyBill": 94.57
+  },
+  "VT": {
+   "priceCents": 23.95,
+   "monthlyKwh": 574,
+   "monthlyBill": 125.66
+  },
+  "VA": {
+   "priceCents": 16.83,
+   "monthlyKwh": 1032,
+   "monthlyBill": 148.77
+  },
+  "WA": {
+   "priceCents": 14.4,
+   "monthlyKwh": 955,
+   "monthlyBill": 113.68
+  },
+  "WV": {
+   "priceCents": 15.47,
+   "monthlyKwh": 1027,
+   "monthlyBill": 154.76
+  },
+  "WI": {
+   "priceCents": 19,
+   "monthlyKwh": 645,
+   "monthlyBill": 110.87
+  },
+  "WY": {
+   "priceCents": 13.95,
+   "monthlyKwh": 863,
+   "monthlyBill": 107.65
+  }
+ }
+}

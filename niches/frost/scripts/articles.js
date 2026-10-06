@@ -184,7 +184,13 @@ const PLACEHOLDERS = {
 };
 
 function fillPlaceholders(body, ctx, slug) {
-  return body.replace(/\{\{(\w+)\}\}/g, (m, name) => {
+  return body.replace(/\{\{gear:([\w-]+)\|([^}]+)\}\}/g, (m, key, text) => {
+    try {
+      return affiliate.inlineLink(key, text);
+    } catch (err) {
+      throw new Error(`guide ${slug}: ${err.message}`);
+    }
+  }).replace(/\{\{(\w+)\}\}/g, (m, name) => {
     if (!PLACEHOLDERS[name]) throw new Error(`guide ${slug}: unknown placeholder {{${name}}}`);
     return PLACEHOLDERS[name](ctx);
   });
@@ -229,6 +235,7 @@ function renderGuide(guide, all, ctx) {
 <article class="article">
 <h1>${escapeHtml(guide.h1)}</h1>
 <p class="lede answer">${escapeHtml(guide.summary)}</p>
+${guide.body.includes('{{gear:') ? affiliate.inlineDisclosure() : ''}
 ${body}
 </article>
 ${affiliate.buildGuideBox(guide.slug)}

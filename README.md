@@ -20,7 +20,23 @@ niches/frost/      Frost niche
   data/            Final JSONs + zipcodes.csv (committed); data/raw/ gitignored (~1.4GB)
   static/          Files copied verbatim to the site root (verification files etc.)
 sites/frost/       Generated static site (gitignored; built by CI)
+niches/solar/      Solar niche: cost, payback and savings for 4,807 US places
+  scripts/         01-state-data (EIA), 02-cities (from frost list), 03-pvwatts
+                   (cached API results), model.js (economics), render.js
+sites/solar/       Generated solar site (gitignored; built by Cloudflare Pages)
 ```
+
+### Solar niche
+
+```
+node niches/solar/scripts/01-state-data.js      # EIA prices + usage -> data/states.json
+node niches/solar/scripts/02-cities.js          # city list from niches/frost/data
+NREL_API_KEY=... node niches/solar/scripts/03-pvwatts.js all   # ~5 h, resumable
+node niches/solar/scripts/test-model.js
+node niches/solar/scripts/render.js full        # sites/solar/
+```
+
+Hosted on Cloudflare Pages (build command `node niches/solar/scripts/test-model.js && node niches/solar/scripts/render.js full`, output `sites/solar`). The frost GitHub Pages workflow ignores `niches/solar/**` pushes.
 
 ## Build
 
