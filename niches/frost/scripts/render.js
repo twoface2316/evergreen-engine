@@ -52,6 +52,18 @@ const { validateBasicPage } = require('../../../engine/lib/html-validate.js');
 const nicheConfig = require('../config.js');
 const guides = require('./guide-pages.js');
 const { cityKey } = require('./06-folds.js');
+const articles = require('./articles.js');
+
+// Long-form guides (niches/frost/content/guides/), loaded once per build so
+// city pages and the homepage can link to them.
+let GUIDES = [];
+
+/** Guides most useful right now: fall frost and fall planting from August, seed starting from January. */
+function seasonalGuideSlugs() {
+  return layout.seasonContext().season === 'fall'
+    ? ['protect-plants-from-frost', 'fall-garden-planting', 'how-frost-dates-work']
+    : ['when-to-start-seeds-indoors', 'harden-off-seedlings', 'how-frost-dates-work'];
+}
 
 const SITE_URL = process.env.SITE_URL || nicheConfig.defaultSiteUrl;
 
@@ -214,6 +226,7 @@ ${layout.buildChartCard(city)}
 ${layout.buildCalendarTable(city, calendarEntries)}
 <h2>Frequently Asked Questions</h2>
 ${faqSection.html}
+${GUIDES.length ? `<h2>Gardening Guides</h2>\n${articles.buildGuideLinks(GUIDES, seasonalGuideSlugs())}` : ''}
 <h2>Nearby Cities in ${layout.escapeHtml(city.state)}</h2>
 ${layout.buildNearbyCities(city, allCities)}`;
 
@@ -298,6 +311,7 @@ ${layout.buildSearchWidget(searchMode, searchPayload)}
 <h2>When to Plant</h2>
 <ul class="link-grid">${popularLinks}</ul>
 <p><a href="${layout.escapeHtml(basePathLib.href('/plant/'))}">All ${crops.length} crops</a> &middot; <a href="${layout.escapeHtml(basePathLib.href('/zones/'))}">Frost dates by USDA hardiness zone</a></p>
+${GUIDES.length ? `<h2>Gardening Guides</h2>\n${articles.buildGuideLinks(GUIDES, GUIDES.map((g) => g.slug))}` : ''}
 <h2>Top 100 Cities by Population</h2>
 ${layout.buildTopCitiesTable(topCities)}
 <h2>How This Works</h2>
@@ -547,6 +561,7 @@ function runFull() {
   // get a redirect stub at their old URL.
   const cities = allCities.filter((c) => !c.foldInto);
   const folded = allCities.filter((c) => c.foldInto);
+  GUIDES = articles.loadGuides();
   layout.setCropGuideStates(new Set(cities.filter((c) => !c.frostFree).map((c) => c.state)));
 
   fs.mkdirSync(siteDir, { recursive: true });
@@ -617,6 +632,8 @@ function runFull() {
   console.log(`  crop guide pages: ${cropUrls.length}`);
   const locate = guides.writeLocateData(allCities, siteDir, path.join(dataDir, 'zipcodes.csv'));
   console.log(`  ZIP lookup: ${locate.mapped}/${locate.total} ZIPs mapped to a city within 150 km (${locate.shardCount} shards)`);
+  const guideUrls = articles.renderGuides(cities, siteDir, GUIDES);
+  console.log(`  guides: ${GUIDES.length} (+ index)`);
 
   // --- 3. Homepage (incl. search index) -----------------------------------
   const { mode: searchMode, payload: searchPayload, bytes: searchBytes } = prepareSearchIndex(cities, siteDir);
@@ -641,7 +658,7 @@ function runFull() {
   // --- 5. sitemap.xml, robots.txt, 404.html --------------------------------
   const urls = ['/', '/about/', '/methodology/', '/privacy/', '/contact/'];
   for (const { stateSlug } of statesMeta) urls.push(`/${stateSlug}/`);
-  urls.push(...zoneUrls, ...cropUrls);
+  urls.push(...guideUrls, ...zoneUrls, ...cropUrls);
   for (const city of cities) urls.push(`/${city.stateSlug}/${city.slug}/`);
   fs.writeFileSync(path.join(siteDir, 'sitemap.xml'), buildSitemapXml(urls, SITE_URL), 'utf8');
   fs.writeFileSync(path.join(siteDir, 'robots.txt'), buildRobotsTxt(SITE_URL), 'utf8');

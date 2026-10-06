@@ -542,3 +542,25 @@ table.calendar.compact td { white-space: normal; }
   padding-left: 1.2em;
 }
 .compare-list li { margin-bottom: 6px; }
+
+/* ---------- long-form guides ---------- */
+.article { line-height: 1.65; }
+.article h2 { margin-top: 36px; }
+.article h3 { margin-top: 24px; }
+.article ul { padding-left: 1.2em; }
+.article li { margin-bottom: 6px; }
+.article .table-scroll { margin: 8px 0 18px; }
+.guide-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+.guide-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.guide-index li { padding: 12px 0; }
+.guide-summary {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}

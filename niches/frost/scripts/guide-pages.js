@@ -320,7 +320,14 @@ ${crop.notes ? `<p>${escapeHtml(crop.notes)}</p>` : ''}
 ${faqBlock(faqs)}
 <h2>Other Crops in ${escapeHtml(stateName)}</h2>
 ${buildCropLinkGrid(stateAbbr, crop.slug)}
-<p><a href="${href(`/plant/${crop.slug}/`)}">When to plant ${escapeHtml(plural)} in other states</a></p>`;
+<p><a href="${href(`/plant/${crop.slug}/`)}">When to plant ${escapeHtml(plural)} in other states</a></p>
+<h2>Related Guides</h2>
+<ul class="guide-list">
+${copy.summaries.seedStart ? `<li><a href="${href('/guides/when-to-start-seeds-indoors/')}">When to start seeds indoors</a></li>
+<li><a href="${href('/guides/harden-off-seedlings/')}">How to harden off seedlings</a></li>` : ''}
+${copy.summaries.fallPlanting ? `<li><a href="${href('/guides/fall-garden-planting/')}">Fall garden planting</a></li>` : ''}
+<li><a href="${href('/guides/protect-plants-from-frost/')}">How to protect plants from frost</a></li>
+</ul>`;
 
   return {
     path: pagePath,
@@ -483,7 +490,7 @@ function renderZonePage(zone, group, allZones, siteDir) {
   ${allFrostFree ? '' : `<div><span class="label">Typical last frost</span> ${escapeHtml(formatDateLong(last))}</div><div><span class="label">Typical first frost</span> ${escapeHtml(formatDateLong(first))}</div>`}
   <div><span class="label">Cities</span> ${group.length}</div>
 </div>
-<p class="table-hint">Hardiness zones describe winter cold, not frost timing. For dates specific to your town, <a href="${href('/')}">look up your ZIP code</a>.</p>
+<p class="table-hint">Hardiness zones describe winter cold, not frost timing (<a href="${href('/guides/hardiness-zones-vs-frost-dates/')}">why that matters</a>). For dates specific to your town, <a href="${href('/')}">look up your ZIP code</a>.</p>
 <h2>Zone ${escapeHtml(zone)} Planting Calendar</h2>
 ${layout.buildCalendarTable(synthetic, entries)}
 <h2>Cities in Zone ${escapeHtml(zone)}</h2>

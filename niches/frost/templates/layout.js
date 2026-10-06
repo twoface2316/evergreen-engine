@@ -544,7 +544,7 @@ function buildFooter() {
   <div class="disclaimer">This page is for general gardening reference only and is <strong>not agronomic, professional, or safety advice</strong>. Frost dates are statistical probabilities from historical climate normals, not guarantees — always check a local forecast before planting or protecting tender plants.</div>
   <p>Frost and temperature normals: <a href="https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals" rel="noopener">NOAA NCEI 1991–2020 U.S. Climate Normals</a>.</p>
   <p>City and place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.</p>
-  <p><a href="${escapeHtml(url('/'))}">Frost dates by ZIP code</a> &middot; <a href="${escapeHtml(url('/zones/'))}">Hardiness zones</a> &middot; <a href="${escapeHtml(url('/plant/'))}">When to plant</a></p>
+  <p><a href="${escapeHtml(url('/'))}">Frost dates by ZIP code</a> &middot; <a href="${escapeHtml(url('/zones/'))}">Hardiness zones</a> &middot; <a href="${escapeHtml(url('/plant/'))}">When to plant</a> &middot; <a href="${escapeHtml(url('/guides/'))}">Guides</a></p>
   <p><a href="${escapeHtml(url('/methodology/'))}">How these dates are calculated (methodology)</a> &middot; <a href="${escapeHtml(url('/about/'))}">About</a> &middot; <a href="${escapeHtml(url('/privacy/'))}">Privacy policy</a> &middot; <a href="${escapeHtml(url('/contact/'))}">Contact</a></p>
   <p>&copy; ${year} FrostCal.</p>
 </footer>`;
