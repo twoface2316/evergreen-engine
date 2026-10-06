@@ -83,15 +83,17 @@ function storeLink(b) {
   return (cfg.urls && cfg.urls[b.id]) || cfg.url;
 }
 
+/** City-page box; until config.printables.url is set it reads "coming soon". */
 function buildCta(city) {
-  if (!cfg.url) return '';
   const b = bucketFor(city);
   if (!b) return '';
-  const link = storeLink(b);
+  const action = cfg.url
+    ? `<a class="btn" href="${escapeHtml(storeLink(b))}" rel="noopener">Get the ${escapeHtml(b.label)} calendar${cfg.price ? ` &middot; ${escapeHtml(cfg.price)}` : ''}</a>`
+    : '<span class="soon">Coming soon</span>';
   return `<aside class="printable-cta">
 <h3>Printable planting calendar for ${escapeHtml(city.name)}</h3>
 <p>${escapeHtml(city.name)}'s average last frost (${escapeHtml(formatDateShort(city.lastSpringFrost.p50))}) puts it on our <strong>last frost ${escapeHtml(b.label)}</strong> calendar: a 12-month chart for 42 crops, a month-by-month task list, and a garden log, ready to print and pin up.</p>
-<a class="btn" href="${escapeHtml(link)}" rel="noopener">Get the ${escapeHtml(b.label)} calendar${cfg.price ? ` &middot; ${escapeHtml(cfg.price)}` : ''}</a>
+${action}
 <a class="more" href="${escapeHtml(basePathLib.href(PRODUCT_PATH))}">See what's inside</a>
 </aside>`;
 }
@@ -107,7 +109,7 @@ function renderProductPage(cities, siteDir, siteUrl) {
   const href = (p) => escapeHtml(basePathLib.href(p));
   const captions = { 1: 'Page 1: your key frost dates and quick dates for popular crops', 2: 'Page 2: 12-month planting chart for 29 vegetables', 4: 'Page 4: what to do each month' };
   const previews = PREVIEW_PAGES.map((n) => `<figure><img src="${href(`/printable-preview-${n}.png`)}" width="1056" height="816" loading="lazy" alt="${escapeHtml(captions[n])} (sample, last frost Apr 15–30 version)"><figcaption>${escapeHtml(captions[n])}</figcaption></figure>`).join('');
-  const rows = stats.map((s) => `<tr><td><strong>${escapeHtml(s.label)}</strong></td><td>${escapeHtml(s.examples.slice(0, 4).join(', '))}</td><td>${selling ? `<a class="btn small" href="${escapeHtml(storeLink(s))}" rel="noopener">Get it${price ? ` &middot; ${escapeHtml(price)}` : ''}</a>` : `${escapeHtml(price)}`}</td></tr>`).join('');
+  const rows = stats.map((s) => `<tr><td><strong>${escapeHtml(s.label)}</strong></td><td>${escapeHtml(s.examples.slice(0, 4).join(', '))}</td><td>${selling ? `<a class="btn small" href="${escapeHtml(storeLink(s))}" rel="noopener">Get it${price ? ` &middot; ${escapeHtml(price)}` : ''}</a>` : '<span class="soon small">Coming soon</span>'}</td></tr>`).join('');
   const faqs = [
     { q: 'Which version do I need?', a: 'Pick the version whose date range contains your average last spring frost. Look up your ZIP code on FrostCal: your city page shows your average last frost and links to the matching calendar.' },
     { q: 'What format is it?', a: 'A 5-page PDF sized for US Letter paper in landscape orientation, designed to print in color or black and white on a home printer.' },
@@ -119,7 +121,7 @@ function renderProductPage(cities, siteDir, siteUrl) {
 <div class="product">
 <h1>Printable Planting Calendar by Frost Date</h1>
 <p class="lede answer">A 5-page planting calendar timed to your frost dates: a 12-month chart for 42 vegetables, herbs, and flowers, a month-by-month task list, and a garden log. Nine versions, one for each half-month of last-frost dates from February 1 to June 15.${price ? ` ${escapeHtml(price)} each, instant PDF download.` : ''}</p>
-${selling ? `<p><a class="btn" href="#versions">Choose your version</a></p>` : ''}
+${selling ? `<p><a class="btn" href="#versions">Choose your version</a></p>` : '<p class="soon-note"><span class="soon">Coming soon</span> Checkout opens shortly. Meanwhile, every planting date in the calendar is free on your <a href="' + href('/') + '">city\'s page</a>.</p>'}
 <div class="previews">${previews}</div>
 <h2>What's inside</h2>
 <ul class="product-list">
@@ -131,7 +133,7 @@ ${selling ? `<p><a class="btn" href="#versions">Choose your version</a></p>` : '
 </ul>
 <h2 id="versions">Choose your version</h2>
 <p>Each version is built for gardens whose <a href="${href('/guides/how-frost-dates-work/')}">average last spring frost</a> falls in its date range. Not sure of yours? <a href="${href('/')}">Look up your ZIP code</a>; your city page names the matching version.</p>
-<div class="table-scroll"><table class="calendar compact"><thead><tr><th>Last frost</th><th>Includes, for example</th><th>${selling ? '' : 'Price'}</th></tr></thead><tbody>${rows}</tbody></table></div>
+<div class="table-scroll"><table class="calendar compact"><thead><tr><th>Last frost</th><th>Includes, for example</th><th>${selling ? '' : 'Availability'}</th></tr></thead><tbody>${rows}</tbody></table></div>
 <h2>Frequently Asked Questions</h2>
 ${faqs.map((f) => `<div class="faq-item"><h3>${escapeHtml(f.q)}</h3><p>${escapeHtml(f.a)}</p></div>`).join('')}
 <p>Prefer free? Every city page on FrostCal has the same planting dates online. The printable puts them on paper for the fridge or the garden shed.</p>
