@@ -8,10 +8,10 @@
  */
 
 module.exports = {
-  siteName: 'SolarPayback',
+  siteName: 'SolarByCity',
   siteTitle: 'Solar Panel Cost, Payback & Savings for US Cities',
-  // Placeholder until the domain is bought; canonical URLs use this.
-  defaultSiteUrl: 'https://solar.example.com',
+  // Production origin (Cloudflare Pages custom domain); canonical URLs use this.
+  defaultSiteUrl: 'https://solarbycity.com',
   // Cloudflare Pages reads the custom domain from the dashboard, not a
   // CNAME file, so this stays null there.
   customDomain: null,
