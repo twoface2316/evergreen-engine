@@ -27,6 +27,7 @@ const basePathLib = require('../../../engine/lib/base-path.js');
 const { buildPageShell } = require('../../../engine/lib/page-shell.js');
 const nicheConfig = require('../config.js');
 const crops = require('../data/crops.json');
+const affiliate = require('./affiliate.js');
 
 const SITE_URL = process.env.SITE_URL || nicheConfig.defaultSiteUrl;
 const CONTENT_DIR = path.join(__dirname, '..', 'content', 'guides');
@@ -230,6 +231,7 @@ function renderGuide(guide, all, ctx) {
 <p class="lede answer">${escapeHtml(guide.summary)}</p>
 ${body}
 </article>
+${affiliate.buildGuideBox(guide.slug)}
 <h2>Find Your Frost Dates</h2>
 ${guides.buildLocateWidget()}
 <h2>More Guides</h2>

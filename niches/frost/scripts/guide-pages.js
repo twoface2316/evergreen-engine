@@ -26,6 +26,7 @@ const basePathLib = require('../../../engine/lib/base-path.js');
 const { buildPageShell } = require('../../../engine/lib/page-shell.js');
 const nicheConfig = require('../config.js');
 const crops = require('../data/crops.json');
+const affiliate = require('./affiliate.js');
 
 const SITE_URL = process.env.SITE_URL || nicheConfig.defaultSiteUrl;
 const { escapeHtml, formatDateShort, formatDateLong, parseMonthDay, pickLength } = layout;
@@ -316,6 +317,7 @@ ${crop.notes ? `<p>${escapeHtml(crop.notes)}</p>` : ''}
 <h2>${escapeHtml(title)} Planting Dates by City</h2>
 <div class="table-scroll"><table class="calendar compact"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
 <p class="table-hint">Showing the ${top.length} most populous of ${group.length} ${escapeHtml(stateName)} cities. Dates are estimates from each city's NOAA frost normals and university extension timing guidelines. <a href="${href(`/${group[0].stateSlug}/`)}">See all ${escapeHtml(stateName)} cities</a>.</p>
+${affiliate.buildCropBox(crop, title, plural)}
 <h2>Frequently Asked Questions</h2>
 ${faqBlock(faqs)}
 <h2>Other Crops in ${escapeHtml(stateName)}</h2>
@@ -359,6 +361,7 @@ ${dtm ? `<div class="fact-row"><div><span class="label">Days to maturity</span> 
 <h2>${escapeHtml(title)} Planting Windows by State</h2>
 <div class="table-scroll"><table class="calendar compact"><thead><tr><th>State</th><th>Planting window across the state</th></tr></thead><tbody>${rows}</tbody></table></div>
 <p class="table-hint">Pick a state for city-by-city dates. For the most precise dates, <a href="${href('/')}">look up your ZIP code</a>.</p>
+${affiliate.buildCropBox(crop, title, plural)}
 <h2>Other Crops</h2>
 ${buildCropLinkGrid(null, crop.slug)}`;
   return {
@@ -493,6 +496,7 @@ function renderZonePage(zone, group, allZones, siteDir) {
 <p class="table-hint">Hardiness zones describe winter cold, not frost timing (<a href="${href('/guides/hardiness-zones-vs-frost-dates/')}">why that matters</a>). For dates specific to your town, <a href="${href('/')}">look up your ZIP code</a>.</p>
 <h2>Zone ${escapeHtml(zone)} Planting Calendar</h2>
 ${layout.buildCalendarTable(synthetic, entries)}
+${affiliate.buildSeasonBox()}
 <h2>Cities in Zone ${escapeHtml(zone)}</h2>
 <div class="table-scroll"><table class="calendar compact"><thead><tr><th>City</th><th>Last frost</th><th>First frost</th></tr></thead><tbody>${cityRows}</tbody></table></div>
 <h3>States with Zone ${escapeHtml(zone)} cities</h3>

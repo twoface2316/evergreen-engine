@@ -27,5 +27,24 @@ module.exports = {
   // AdSense publisher ID, e.g. 'pub-1234567890123456' (from AdSense ->
   // Account -> Account information). Adds the Auto ads tag to every page and
   // writes /ads.txt. null = no ads.
-  adsensePublisherId: 'pub-8043947909143318'
+  adsensePublisherId: 'pub-8043947909143318',
+
+  // Affiliate links (scripts/affiliate.js). null = no gear boxes, no
+  // disclosure. amazonTag: your Associates tracking ID, e.g. 'frostcal-20'.
+  // seedShop: e.g. { name: 'True Leaf Market',
+  //   searchUrl: 'https://www.trueleafmarket.com/search?q={q}',
+  //   linkTemplate: '<network deep-link URL with {url}>' }
+  affiliate: {
+    amazonTag: null,
+    seedShop: null
+  },
+
+  // Printable planting calendars (scripts/printables.js). url: store page
+  // (Lemon Squeezy/Gumroad/Etsy); null = no "Get the printable" box on city
+  // pages. urls: optional per-bucket overrides keyed by bucket id ('apr-15').
+  printables: {
+    url: null,
+    urls: {},
+    price: '$5'
+  }
 };

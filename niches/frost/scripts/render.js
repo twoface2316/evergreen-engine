@@ -53,6 +53,8 @@ const nicheConfig = require('../config.js');
 const guides = require('./guide-pages.js');
 const { cityKey } = require('./06-folds.js');
 const articles = require('./articles.js');
+const affiliate = require('./affiliate.js');
+const printables = require('./printables.js');
 
 // Long-form guides (niches/frost/content/guides/), loaded once per build so
 // city pages and the homepage can link to them.
@@ -224,6 +226,8 @@ ${layout.buildComparison(city, allCities)}
 ${layout.buildChartCard(city)}
 <h2>Planting Calendar</h2>
 ${layout.buildCalendarTable(city, calendarEntries)}
+${printables.buildCta(city)}
+${affiliate.buildSeasonBox()}
 <h2>Frequently Asked Questions</h2>
 ${faqSection.html}
 ${GUIDES.length ? `<h2>Gardening Guides</h2>\n${articles.buildGuideLinks(GUIDES, seasonalGuideSlugs())}` : ''}

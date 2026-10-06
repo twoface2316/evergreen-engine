@@ -568,3 +568,45 @@ table.calendar.compact td { white-space: normal; }
 /* Guide source citations */
 .sources { font-size: 0.9rem; color: var(--text-muted); padding-left: 1.2em; }
 .sources li { margin-bottom: 4px; }
+
+/* ---------- affiliate gear box ---------- */
+.gear-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--earth);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 18px 10px;
+  margin: 8px 0 26px;
+}
+.gear-box h3 { margin: 0 0 8px; font-size: 1.05rem; }
+.gear-box ul { list-style: none; margin: 0; padding: 0; }
+.gear-box li { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.gear-box li:last-child { border-bottom: 0; }
+.gear-box li a { font-weight: 600; }
+.gear-box li span { display: block; font-size: 0.88rem; color: var(--text-muted); margin-top: 2px; }
+.gear-box .gear-note { font-size: 0.75rem; color: var(--text-muted); margin: 6px 0 0; }
+
+/* ---------- printable calendar call to action ---------- */
+.printable-cta {
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin: 8px 0 22px;
+}
+.printable-cta h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.printable-cta p { margin: 0 0 12px; font-size: 0.95rem; }
+.printable-cta .btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+}
+.printable-cta .btn:hover { background: var(--accent-dark); }
+@media (prefers-color-scheme: dark) {
+  .printable-cta .btn { color: #12160f; }
+}

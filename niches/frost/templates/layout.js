@@ -540,13 +540,16 @@ function buildBreadcrumbs(city) {
 
 function buildFooter() {
   const year = new Date().getFullYear();
+  // Required lazily: affiliate.js requires this module.
+  const disclosure = require('../scripts/affiliate.js').footerDisclosure();
   return `<footer class="site-footer">
   <div class="disclaimer">This page is for general gardening reference only and is <strong>not agronomic, professional, or safety advice</strong>. Frost dates are statistical probabilities from historical climate normals, not guarantees — always check a local forecast before planting or protecting tender plants.</div>
   <p>Frost and temperature normals: <a href="https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals" rel="noopener">NOAA NCEI 1991–2020 U.S. Climate Normals</a>.</p>
   <p>City and place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.</p>
   <p><a href="${escapeHtml(url('/'))}">Frost dates by ZIP code</a> &middot; <a href="${escapeHtml(url('/zones/'))}">Hardiness zones</a> &middot; <a href="${escapeHtml(url('/plant/'))}">When to plant</a> &middot; <a href="${escapeHtml(url('/guides/'))}">Guides</a></p>
   <p><a href="${escapeHtml(url('/methodology/'))}">How these dates are calculated (methodology)</a> &middot; <a href="${escapeHtml(url('/about/'))}">About</a> &middot; <a href="${escapeHtml(url('/privacy/'))}">Privacy policy</a> &middot; <a href="${escapeHtml(url('/contact/'))}">Contact</a></p>
-  <p>&copy; ${year} FrostCal.</p>
+  ${disclosure ? `<p>${escapeHtml(disclosure)}</p>
+  ` : ''}<p>&copy; ${year} FrostCal.</p>
 </footer>`;
 }
 
@@ -984,7 +987,7 @@ function buildAboutBody(cityCount, contactEmail) {
 <p>Pages are generated directly from the data above, so every city uses the same method and nothing is copied by hand. The site is rebuilt monthly. The underlying climate normals are revised by NOAA once a decade; the next release (2001&ndash;2030) will be adopted when it's published.</p>
 
 <h2>Independence</h2>
-<p>FrostCal is an independent project. It is not affiliated with NOAA, the USDA, or any seed or garden company. The site is free to use and is supported by advertising.</p>
+<p>FrostCal is an independent project. It is not affiliated with NOAA, the USDA, or any seed or garden company. The site is free to use and is supported by advertising${require('../scripts/affiliate.js').enabled() ? ' and by affiliate links to garden supplies, which earn a commission on purchases at no cost to you. Affiliate relationships never change the frost dates or planting windows' : ''}.</p>
 
 <h2>Corrections</h2>
 <p>If a date looks wrong for your area, or your town is missing, email <a href="mailto:${escapeHtml(contactEmail)}">${escapeHtml(contactEmail)}</a>. Microclimates are real: a valley, a hilltop, or a spot near a large lake can differ from the nearest station by a week or more, and reports like that help improve the site.</p>
@@ -1009,7 +1012,10 @@ function buildPrivacyBody(contactEmail) {
 <h2>Advertising</h2>
 <p>FrostCal may display third-party advertising (for example, Google AdSense) to keep the site free. Ad providers may use cookies or similar technologies to serve and measure ads, including personalized ads where permitted. You can learn about Google's use of advertising data and opt out of personalization at <a href="https://policies.google.com/technologies/ads" rel="noopener">policies.google.com/technologies/ads</a>. This section applies only if and when ads are actually shown on the site.</p>
 
-<h2>External links</h2>
+${require('../scripts/affiliate.js').enabled() ? `<h2>Affiliate links</h2>
+<p>Some pages link to retailers through affiliate programs (such as Amazon Associates). If you buy after clicking one, FrostCal may earn a commission. The retailer may use cookies to attribute the purchase; FrostCal receives no personal information about you from these programs.</p>
+
+` : ''}<h2>External links</h2>
 <p>Pages link to external resources (NOAA, GeoNames, retailers, and others). Their privacy practices are their own; this policy covers only FrostCal.</p>
 
 <h2>Contact</h2>
