@@ -328,22 +328,33 @@ function buildStatesTable(states) {
 </table></div>`;
 }
 
-function buildSearchWidget(records) {
+/**
+ * City search box. The index (search.json: [[name, state, path], ...]) is
+ * fetched on first use so the homepage stays small.
+ */
+function buildSearchWidget() {
   return `<div class="search">
   <label for="q">Find your city</label>
   <input id="q" type="search" placeholder="e.g. Austin, TX" autocomplete="off">
   <ul id="q-results"></ul>
   <script>
 (function () {
-  var R = ${JSON.stringify(records)};
+  var R = null, pending = null;
   var q = document.getElementById('q'), out = document.getElementById('q-results');
-  q.addEventListener('input', function () {
+  function load() {
+    if (!pending) pending = fetch(${JSON.stringify(url('/search.json'))}).then(function (r) { return r.json(); }).then(function (d) { R = d; });
+    return pending;
+  }
+  function show() {
     var t = q.value.toLowerCase().replace(/,/g, ' ').trim().split(/\\s+/).filter(Boolean);
     out.innerHTML = '';
-    if (!t.length) return;
-    var hits = R.filter(function (r) { var s = (r.n + ' ' + r.s).toLowerCase(); return t.every(function (w) { return s.indexOf(w) !== -1; }); }).slice(0, 10);
-    hits.forEach(function (r) { var li = document.createElement('li'); var a = document.createElement('a'); a.href = r.u; a.textContent = r.n + ', ' + r.s; li.appendChild(a); out.appendChild(li); });
-  });
+    if (!t.length || !R) return;
+    R.filter(function (r) { var s = (r[0] + ' ' + r[1]).toLowerCase(); return t.every(function (w) { return s.indexOf(w) !== -1; }); }).slice(0, 10).forEach(function (r) {
+      var li = document.createElement('li'); var a = document.createElement('a'); a.href = r[2]; a.textContent = r[0] + ', ' + r[1]; li.appendChild(a); out.appendChild(li);
+    });
+  }
+  q.addEventListener('focus', load);
+  q.addEventListener('input', function () { load().then(show); });
 })();
   </script>
 </div>`;

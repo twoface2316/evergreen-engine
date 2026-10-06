@@ -275,12 +275,11 @@ ${layout.buildCalculator({
 }
 
 function renderHome(m) {
-  const records = m.rows.map((r) => ({ n: r.city.name, s: r.city.state, u: layout.url(layout.cityPath(r.city)) }));
   const biggest = [...m.rows].sort((a, b) => (b.city.population || 0) - (a.city.population || 0)).slice(0, 25);
   const states = stateTableRows(m).sort((a, b) => a.name.localeCompare(b.name));
   const body = `<h1>Is Solar Worth It Where You Live?</h1>
 <p class="lede">Cost, payback and 25-year savings for home solar in ${layout.num(m.rows.length)} US cities and towns — from public sunshine, electricity-price and installed-cost data, with no federal tax credit assumed (it ended after 2025).</p>
-<section class="card">${layout.buildSearchWidget(records)}</section>
+<section class="card">${layout.buildSearchWidget()}</section>
 <section class="card">
 <h2>Largest cities</h2>
 ${layout.buildStateTable(biggest)}
@@ -339,6 +338,7 @@ function main() {
   writePage('/states/', renderStatesIndex(m));
   writePage('/solar-calculator/', renderCalculatorPage(m));
   writePage('/', renderHome(m));
+  fs.writeFileSync(path.join(SITE_DIR, 'search.json'), JSON.stringify(m.rows.map((r) => [r.city.name, r.city.state, layout.url(layout.cityPath(r.city))])), 'utf8');
   writePage('/methodology/', renderSimple('/methodology/', 'How Our Solar Estimates Are Calculated', 'Data sources and assumptions behind every solar cost, production and payback estimate on this site.', layout.buildMethodologyBody(m.statesData, m.installedCost)));
   writePage('/about/', renderSimple('/about/', `About ${config.siteName}`, `What ${config.siteName} is, where its data comes from, and how it is funded.`, layout.buildAboutBody(m.rows.length, config.contactEmail)));
   writePage('/privacy/', renderSimple('/privacy/', 'Privacy Policy', `${config.siteName} privacy policy: hosting, analytics and advertising disclosures.`, layout.buildPrivacyBody(config.contactEmail)));

@@ -38,6 +38,21 @@ node niches/solar/scripts/render.js full        # sites/solar/
 
 Hosted on Cloudflare Pages (build command `node niches/solar/scripts/test-model.js && node niches/solar/scripts/render.js full`, output `sites/solar`). The frost GitHub Pages workflow ignores `niches/solar/**` pushes.
 
+### Home (water + radon) niche
+
+Tap water utility, EPA violations, lead/copper, hardness and radon zone per place. Raw inputs (gitignored, `niches/home/data/raw/`): EPA ECHO `SDWA_latest_downloads.zip` unzipped, `radon-zones.json` (EPA), `water-hardness.csv` (TapWaterData, CC BY 4.0), `counties-fips.geojson` (plotly/datasets, pre-2022 Census counties).
+
+```
+node niches/home/scripts/01-cities.js     # solar city list + county (GeoNames, boundary fallback)
+node niches/home/scripts/02-water.js      # utilities, violations, lead/copper -> data/water.json
+node niches/home/scripts/03-radon.js      # county radon zones
+node niches/home/scripts/04-hardness.js   # hardness by city
+node niches/home/scripts/test-model.js
+node niches/home/scripts/render.js        # sites/home/ (`sample` for 8 cities)
+```
+
+Cloudflare Pages: build command `node niches/home/scripts/test-model.js && node niches/home/scripts/render.js`, output `sites/home`.
+
 ## Build
 
 ```
