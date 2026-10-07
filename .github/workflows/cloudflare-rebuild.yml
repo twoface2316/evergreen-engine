@@ -1,0 +1,36 @@
+name: Rebuild Cloudflare sites
+
+# Cloudflare Pages builds each niche on push. This adds a monthly rebuild
+# so year-stamped titles and copy stay current with no commits.
+# Repo secrets (Cloudflare Pages -> project -> Settings -> Builds -> Deploy
+# hooks): CF_SOLAR_DEPLOY_HOOK (solarbycity), CF_HOME_DEPLOY_HOOK (water site).
+# A missing secret just skips that site.
+on:
+  schedule:
+    - cron: '23 9 1 * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Cloudflare deploy hooks
+        env:
+          SOLAR: ${{ secrets.CF_SOLAR_DEPLOY_HOOK }}
+          HOME_SITE: ${{ secrets.CF_HOME_DEPLOY_HOOK }}
+        run: |
+          for pair in "solar:$SOLAR" "home:$HOME_SITE"; do
+            name="${pair%%:*}"; hook="${pair#*:}"
+            if [ -z "$hook" ]; then echo "$name: no deploy hook secret; skipping"; continue; fi
+            curl -fsS -X POST "$hook" > /dev/null && echo "$name: rebuild triggered"
+          done
+      # GitHub disables scheduled workflows after 60 days without repo
+      # activity; re-enabling on every run keeps the monthly rebuild alive.
+      - name: Keep monthly schedule enabled
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/cloudflare-rebuild.yml/enable"
