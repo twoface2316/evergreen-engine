@@ -148,3 +148,11 @@ table.data th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0
 /* Footer */
 .site-footer { font-size: 0.85rem; color: var(--text-muted); border-top: 1px solid var(--border); margin-top: 28px; padding: 16px 0 28px; }
 .disclaimer { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+
+/* Guides */
+.prose h2 { margin-top: 1.4rem; }
+.prose h2:first-child { margin-top: 0; }
+.prose ul, .prose ol { padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+.prose .table-wrap { margin: 0.8rem 0; }
+.prose blockquote { margin: 0.8rem 0; padding: 8px 14px; border-left: 4px solid var(--sun); background: var(--surface-2); border-radius: 0 8px 8px 0; }

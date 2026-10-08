@@ -27,6 +27,10 @@ const layout = require('../templates/layout.js');
 const config = require('../config.js');
 const { computeEconomics, costPerWattFor, policyFor } = require('./model.js');
 const { STATE_NAMES, stateName } = require('./states.js');
+const guidesLib = require('./guides.js');
+
+// Long-form guides (content/guides/), loaded once per build.
+const GUIDES = guidesLib.loadGuides();
 
 const basePathLib = require('../../../engine/lib/base-path.js');
 const { buildPageShell, setShellDefaults } = require('../../../engine/lib/page-shell.js');
@@ -190,7 +194,8 @@ ${layout.buildCalculator({
 ${layout.buildComparison(city, e, { statePeers: ss.peers.map((p) => ({ city: p.city })), stateMedianKwh: ss.medianKwh, usMedianKwh: m.usMedianKwh, pv })}
 ${layout.buildIncentives(city, e, st, r.policy, m.policies.selfConsumption)}
 ${layout.buildFaqSection(faqs)}
-${layout.buildNearby(nearby.map((o) => ({ city: o.city, e: o.e })))}`;
+${layout.buildNearby(nearby.map((o) => ({ city: o.city, e: o.e })))}
+${guidesLib.buildGuideLinks(cityGuides(r.policy))}`;
   return page({
     title: layout.buildCityTitle(city),
     description: layout.buildCityDescription(city, e),
@@ -198,6 +203,15 @@ ${layout.buildNearby(nearby.map((o) => ({ city: o.city, e: o.e })))}`;
     bodyHtml: body,
     jsonLdHtml: jsonLd([place, layout.buildFaqJsonLd(faqs), breadcrumbLd(trail)])
   });
+}
+
+/** Guides most relevant to a city: export rules first where they bite. */
+function cityGuides(policy) {
+  const order = policy.type === 'net-billing'
+    ? ['net-metering-vs-net-billing', 'solar-battery-worth-it', 'is-solar-worth-it-2026', 'how-to-read-a-solar-quote', 'solar-lease-vs-buy']
+    : ['is-solar-worth-it-2026', 'how-to-read-a-solar-quote', 'solar-lease-vs-buy', 'net-metering-vs-net-billing', 'solar-battery-worth-it'];
+  const bySlug = new Map(GUIDES.map((g) => [g.slug, g]));
+  return order.map((s) => bySlug.get(s)).filter(Boolean);
 }
 
 function renderState(ss) {
@@ -303,7 +317,8 @@ ${layout.buildStateTable(biggest)}
 <h2>Solar by state</h2>
 <ul class="states-az">${states.map((s) => `<li><a href="${layout.escapeHtml(layout.url(layout.statePath(s.abbr)))}">${layout.escapeHtml(s.name)}</a></li>`).join('')}</ul>
 <p><a href="${layout.escapeHtml(layout.url('/states/'))}">All states ranked by payback →</a> &middot; <a href="${layout.escapeHtml(layout.url('/solar-calculator/'))}">Solar calculator →</a></p>
-</section>`;
+</section>
+${guidesLib.buildGuideLinks(GUIDES, 8)}`;
   return page({
     title: `${config.siteName}: Solar Panel Cost & Payback by City (${layout.buildYear()})`,
     description: `Is solar worth it in your city? Cost, payback period and 25-year savings for home solar in ${layout.num(m.rows.length)} US cities, from NREL, EIA and Berkeley Lab data.`,
@@ -353,6 +368,7 @@ function main() {
   writePage('/states/', renderStatesIndex(m));
   writePage('/solar-calculator/', renderCalculatorPage(m));
   writePage('/', renderHome(m));
+  const guideUrls = guidesLib.renderGuides({ guides: GUIDES, m, page, writePage, siteUrl: SITE_URL });
   fs.writeFileSync(path.join(SITE_DIR, 'search.json'), JSON.stringify(m.rows.map((r) => [r.city.name, r.city.state, layout.url(layout.cityPath(r.city))])), 'utf8');
   writePage('/methodology/', renderSimple('/methodology/', 'How Our Solar Estimates Are Calculated', 'Data sources and assumptions behind every solar cost, production and payback estimate on this site.', layout.buildMethodologyBody(m.statesData, m.installedCost, m.policies)));
   writePage('/about/', renderSimple('/about/', `About ${config.siteName}`, `What ${config.siteName} is, where its data comes from, and how it is funded.`, layout.buildAboutBody(m.rows.length, config.contactEmail)));
@@ -364,7 +380,7 @@ function main() {
     'utf8'
   );
 
-  const urls = ['/', '/states/', '/solar-calculator/', '/methodology/', '/about/', ...[...m.stateStats.keys()].map(layout.statePath), ...m.rows.map((r) => layout.cityPath(r.city))];
+  const urls = ['/', '/states/', '/solar-calculator/', '/methodology/', '/about/', ...guideUrls, ...[...m.stateStats.keys()].map(layout.statePath), ...m.rows.map((r) => layout.cityPath(r.city))];
   fs.writeFileSync(path.join(SITE_DIR, 'sitemap.xml'), buildSitemapXml(urls, SITE_URL), 'utf8');
   fs.writeFileSync(path.join(SITE_DIR, 'robots.txt'), buildRobotsTxt(SITE_URL), 'utf8');
   if (config.adsensePublisherId) {

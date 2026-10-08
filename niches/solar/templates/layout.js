@@ -72,7 +72,7 @@ function buildCityDescription(city, e) {
 function buildSiteHeader() {
   return `<header class="site-header"><div class="wrap">
   <a class="brand" href="${escapeHtml(url('/'))}"><span class="sun" aria-hidden="true"></span>${escapeHtml(config.siteName)}</a>
-  <nav><a href="${escapeHtml(url('/solar-calculator/'))}">Calculator</a><a href="${escapeHtml(url('/states/'))}">States</a><a href="${escapeHtml(url('/methodology/'))}">Methodology</a></nav>
+  <nav><a href="${escapeHtml(url('/solar-calculator/'))}">Calculator</a><a href="${escapeHtml(url('/states/'))}">States</a><a href="${escapeHtml(url('/guides/'))}">Guides</a></nav>
 </div></header>`;
 }
 
@@ -88,7 +88,7 @@ function buildFooter(sources) {
   <div class="disclaimer">Estimates for planning only — <strong>not a quote, and not financial or tax advice</strong>. Your roof, shading, utility rate plan and installer pricing change the numbers; get several quotes before deciding.</div>
   <p>Solar production: <a href="https://pvwatts.nrel.gov/" rel="noopener">PVWatts®</a> (NREL, now the National Laboratory of the Rockies), NSRDB typical-year weather. Electricity prices and usage: <a href="https://www.eia.gov/electricity/" rel="noopener">U.S. Energy Information Administration</a>${sources && sources.priceAsOf ? ` (prices through ${escapeHtml(sources.priceAsOf)})` : ''}. Installed costs: <a href="https://emp.lbl.gov/tracking-the-sun" rel="noopener">Berkeley Lab</a>, 2025 installs.</p>
   <p>Place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.</p>
-  <p><a href="${escapeHtml(url('/solar-calculator/'))}">Solar calculator</a> &middot; <a href="${escapeHtml(url('/states/'))}">Solar by state</a> &middot; <a href="${escapeHtml(url('/methodology/'))}">Methodology</a> &middot; <a href="${escapeHtml(url('/about/'))}">About</a> &middot; <a href="${escapeHtml(url('/privacy/'))}">Privacy</a> &middot; <a href="${escapeHtml(url('/contact/'))}">Contact</a></p>
+  <p><a href="${escapeHtml(url('/solar-calculator/'))}">Solar calculator</a> &middot; <a href="${escapeHtml(url('/states/'))}">Solar by state</a> &middot; <a href="${escapeHtml(url('/guides/'))}">Guides</a> &middot; <a href="${escapeHtml(url('/methodology/'))}">Methodology</a> &middot; <a href="${escapeHtml(url('/about/'))}">About</a> &middot; <a href="${escapeHtml(url('/privacy/'))}">Privacy</a> &middot; <a href="${escapeHtml(url('/contact/'))}">Contact</a></p>
   <p>&copy; ${buildYear()} ${escapeHtml(config.siteName)}.</p>
 </footer>`;
 }
