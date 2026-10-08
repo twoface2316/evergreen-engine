@@ -19,7 +19,7 @@ module.exports = {
 
   // ---- Monetization / analytics: paste IDs here, push, done. ----
   goatcounterCode: null,
-  adsensePublisherId: null,
+  adsensePublisherId: 'pub-8043947909143318',
   // Solar quote lead-gen partner. url: affiliate landing URL (may include
   // {zip}/{state} placeholders); null = no "get quotes" boxes.
   leadGen: {
