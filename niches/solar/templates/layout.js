@@ -8,7 +8,7 @@
 
 const { escapeHtml } = require('../../../engine/lib/escape-html.js');
 const basePath = require('../../../engine/lib/base-path.js');
-const { cashFlow, paybackYears, sizeSystem } = require('../scripts/model.js');
+const { cashFlow, paybackYears, sizeSystem, solarValueCents } = require('../scripts/model.js');
 const { stateName } = require('../scripts/states.js');
 const config = require('../config.js');
 
@@ -21,8 +21,10 @@ const statePath = (abbr) => `/${abbr.toLowerCase()}/`;
 // ---------------------------------------------------------------------
 // Formatting
 // ---------------------------------------------------------------------
-const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
-const moneyK = (n) => (n >= 10000 ? '$' + (Math.round(n / 100) / 10).toLocaleString('en-US') + 'k' : money(n));
+const money = (n) => (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
+const moneyK = (n) => (Math.abs(n) >= 10000 ? (n < 0 ? '−$' : '$') + (Math.round(Math.abs(n) / 100) / 10).toLocaleString('en-US') + 'k' : money(n));
+/** "saving roughly $X" / "losing roughly $X" over the system's life. */
+const netPhrase = (n, fmt) => (n >= 0 ? `saving ${fmt(n)}` : `losing ${fmt(-n)}`);
 const num = (n) => Math.round(n).toLocaleString('en-US');
 const fix1 = (n) => (Math.round(n * 10) / 10).toFixed(1);
 const cents = (c) => `${fix1(c)}¢`;
@@ -61,7 +63,7 @@ function buildCityTitle(city) {
 }
 
 function buildCityDescription(city, e) {
-  return `A typical ${fix1(e.sizeKw)} kW solar system in ${city.name}, ${city.state} costs about ${money(e.netCost)} and pays back in ${years(e.payback)}, saving ~${moneyK(e.netLifetime)} over 25 years.`;
+  return `A typical ${fix1(e.sizeKw)} kW solar system in ${city.name}, ${city.state} costs about ${money(e.netCost)} and pays back in ${years(e.payback)}, ${netPhrase(e.netLifetime, (n) => '~' + moneyK(n))} over 25 years.`;
 }
 
 // ---------------------------------------------------------------------
@@ -94,15 +96,16 @@ function buildFooter(sources) {
 // ---------------------------------------------------------------------
 // City page sections
 // ---------------------------------------------------------------------
-function buildAnswerLede(city, e, st) {
-  return `<p class="lede">A typical <strong>${fix1(e.sizeKw)} kW</strong> home solar system in ${escapeHtml(city.name)} costs about <strong>${money(e.netCost)}</strong> and pays for itself in about <strong>${years(e.payback)}</strong>, saving roughly <strong>${money(e.netLifetime)}</strong> over 25 years at ${escapeHtml(possessive(stateName(city.state)))} average electricity price of ${cents(st.priceCents)}/kWh.</p>`;
+function buildAnswerLede(city, e, st, policy) {
+  const exportNote = policy.type === 'net-billing' ? ` Power you send back to the grid earns only about ${cents(policy.exportCents)}/kWh here, which is built into these numbers.` : '';
+  return `<p class="lede">A typical <strong>${fix1(e.sizeKw)} kW</strong> home solar system in ${escapeHtml(city.name)} costs about <strong>${money(e.netCost)}</strong> and ${e.payback == null ? `<strong>doesn't pay for itself within 25 years</strong>, ${netPhrase(e.netLifetime, (n) => `roughly <strong>${money(n)}</strong>`)} overall` : `pays for itself in about <strong>${years(e.payback)}</strong>, ${netPhrase(e.netLifetime, (n) => `roughly <strong>${money(n)}</strong>`)} over 25 years`} at ${escapeHtml(possessive(st.priceOwner || stateName(city.state)))} average electricity price of ${cents(st.priceCents)}/kWh.${exportNote}</p>`;
 }
 
 function stat(label, value, sub) {
   return `<div class="stat"><div class="stat-label">${label}</div><div class="stat-value">${value}</div>${sub ? `<div class="stat-sub">${sub}</div>` : ''}</div>`;
 }
 
-function buildSummary(city, e, pv, costScope) {
+function buildSummary(city, e, pv, costScope, policy) {
   const v = verdict(e.payback);
   const costSub = costScope === 'state' ? `at ${escapeHtml(stateName(city.state))} median $${e.costPerWatt.toFixed(2)}/W` : `at US median $${e.costPerWatt.toFixed(2)}/W`;
   return `<section class="summary" aria-label="Solar summary for ${escapeHtml(city.name)}">
@@ -110,7 +113,7 @@ function buildSummary(city, e, pv, costScope) {
   <div class="stats">
     ${stat('System size', `${fix1(e.sizeKw)} kW`, `${e.panels} × ${config.assumptions.panelWatts} W panels`)}
     ${stat('Upfront cost', money(e.netCost), costSub)}
-    ${stat('First-year savings', money(e.year1Savings), `about ${money(e.monthlySavings)}/month`)}
+    ${stat('First-year savings', money(e.year1Savings), policy.type === 'net-billing' ? `solar worth ${cents(e.valueCents)}/kWh after export credits` : `about ${money(e.monthlySavings)}/month`)}
     ${stat('25-year net savings', money(e.netLifetime), 'after paying for the system')}
     ${stat('Production', `${num(e.annualKwh)} kWh/yr`, `${pct(e.offset)} of a typical home's use`)}
     ${stat('Peak sun hours', `${pv.sunHours.toFixed(1)}/day`, `${num(pv.kwhPerKw)} kWh per kW per year`)}
@@ -161,12 +164,12 @@ function buildProductionChart(city, e) {
  * Interactive payback calculator. The model functions are embedded from
  * model.js source so the calculator reproduces the page's numbers.
  */
-function buildCalculator({ id = 'calc', heading, intro, kwhPerKw, priceCents, monthlyBill, costPerWatt, stateOptions }) {
+function buildCalculator({ id = 'calc', heading, intro, kwhPerKw, priceCents, monthlyBill, costPerWatt, exportCents = null, feePerKwMonth = 0, selfUse = 0.4, stateOptions }) {
   const a = config.assumptions;
-  const data = { kwhPerKw, a: { offsetShare: a.offsetShare, minKw: a.minKw, maxKw: a.maxKw, panelWatts: a.panelWatts, degradation: a.degradation, lifetimeYears: a.lifetimeYears, federalCredit: a.federalCredit } };
+  const data = { kwhPerKw, fee: feePerKwMonth, a: { offsetShare: a.offsetShare, minKw: a.minKw, maxKw: a.maxKw, panelWatts: a.panelWatts, degradation: a.degradation, lifetimeYears: a.lifetimeYears, federalCredit: a.federalCredit } };
   const stateSelect = stateOptions
     ? `<label class="wide">State<select id="${id}-state">${stateOptions
-        .map((s) => `<option value="${s.abbr}" data-kwh="${s.kwhPerKw}" data-price="${s.priceCents.toFixed(2)}" data-bill="${s.monthlyBill.toFixed(2)}" data-cpw="${s.costPerWatt}"${s.selected ? ' selected' : ''}>${escapeHtml(s.name)}</option>`)
+        .map((s) => `<option value="${s.abbr}" data-kwh="${s.kwhPerKw}" data-price="${s.priceCents.toFixed(2)}" data-bill="${s.monthlyBill.toFixed(2)}" data-cpw="${s.costPerWatt}" data-export="${s.exportCents == null ? '' : s.exportCents.toFixed(2)}" data-fee="${s.feePerKwMonth || 0}"${s.selected ? ' selected' : ''}>${escapeHtml(s.name)}</option>`)
         .join('')}</select></label>`
     : '';
   return `<section class="card calc" id="${id}">
@@ -178,7 +181,10 @@ function buildCalculator({ id = 'calc', heading, intro, kwhPerKw, priceCents, mo
     <label>Electricity price (¢/kWh)<input id="${id}-price" type="number" min="3" max="80" step="0.01" value="${priceCents.toFixed(2)}"></label>
     <label>Installed cost ($/W)<input id="${id}-cpw" type="number" min="1" max="8" step="0.05" value="${costPerWatt.toFixed(2)}"></label>
     <label>Price increase per year (%)<input id="${id}-esc" type="number" min="0" max="10" step="0.5" value="${(a.priceEscalation * 100).toFixed(1)}"></label>
+    <label>Export credit (¢/kWh)<input id="${id}-exp" type="number" min="0" max="80" step="0.01" placeholder="full retail" value="${exportCents == null ? '' : exportCents.toFixed(2)}"></label>
+    <label>Solar used at home (%)<input id="${id}-self" type="number" min="0" max="100" step="5" value="${Math.round(selfUse * 100)}"></label>
   </form>
+  <p class="muted">Leave export credit blank where the utility offers full net metering. Where exports earn less, solar used at home as it's produced is worth the full price and the rest earns the export credit.</p>
   <div class="calc-out" aria-live="polite">
     <div><span>System</span><strong id="${id}-size"></strong></div>
     <div><span>Cost</span><strong id="${id}-cost"></strong></div>
@@ -191,17 +197,19 @@ function buildCalculator({ id = 'calc', heading, intro, kwhPerKw, priceCents, mo
   ${cashFlow.toString()}
   ${paybackYears.toString()}
   ${sizeSystem.toString()}
+  ${solarValueCents.toString()}
   var D = ${JSON.stringify(data)};
   var $ = function (s) { return document.getElementById('${id}-' + s); };
-  var fmt = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
+  var fmt = function (n) { return (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US'); };
   function run() {
     var bill = +$('bill').value, price = +$('price').value, cpw = +$('cpw').value, esc = +$('esc').value / 100;
+    var exp = $('exp').value === '' ? null : +$('exp').value, self = +$('self').value / 100;
     if (!(bill > 0 && price > 0 && cpw > 0)) return;
     var usage = bill / (price / 100) * 12;
     var s = sizeSystem(usage, D.kwhPerKw, D.a);
     var annual = s.sizeKw * D.kwhPerKw;
     var cost = s.sizeKw * 1000 * cpw * (1 - D.a.federalCredit);
-    var flow = cashFlow(annual, price, D.a.lifetimeYears, D.a.degradation, esc);
+    var flow = cashFlow(annual, solarValueCents(price, exp, self), D.a.lifetimeYears, D.a.degradation, esc, D.fee * s.sizeKw * 12);
     var pb = paybackYears(cost, flow);
     var total = flow.reduce(function (t, v) { return t + v; }, 0);
     $('size').textContent = s.sizeKw.toFixed(1) + ' kW (' + s.panels + ' panels)';
@@ -213,24 +221,31 @@ function buildCalculator({ id = 'calc', heading, intro, kwhPerKw, priceCents, mo
   var st = $('state');
   if (st) st.addEventListener('change', function () {
     var o = st.options[st.selectedIndex];
-    D.kwhPerKw = +o.dataset.kwh;
-    $('price').value = o.dataset.price; $('bill').value = o.dataset.bill; $('cpw').value = o.dataset.cpw;
+    D.kwhPerKw = +o.dataset.kwh; D.fee = +o.dataset.fee;
+    $('price').value = o.dataset.price; $('bill').value = o.dataset.bill; $('cpw').value = o.dataset.cpw; $('exp').value = o.dataset.export;
     run();
   });
-  ['bill', 'price', 'cpw', 'esc'].forEach(function (k) { $(k).addEventListener('input', run); });
+  ['bill', 'price', 'cpw', 'esc', 'exp', 'self'].forEach(function (k) { $(k).addEventListener('input', run); });
   run();
 })();
   </script>
 </section>`;
 }
 
-function buildIncentives(city) {
+function buildIncentives(city, e, prices, policy, selfUse) {
   const st = stateName(city.state);
+  const src = policy.sourceUrl ? ` <a href="${escapeHtml(policy.sourceUrl)}" rel="noopener">Source</a>.` : '';
+  const exportHtml =
+    policy.type === 'net-billing'
+      ? `<p><strong>${escapeHtml(st)} pays less than retail for exported solar power.</strong> Under ${escapeHtml(policy.label)}, power you send to the grid earns about ${cents(policy.exportCents)}/kWh, against ${cents(prices.priceCents)} for power you buy. We assume ${pct(selfUse)} of a no-battery system's output is used at home as it's produced (worth the full price) and the rest is exported, so each solar kWh is worth about <strong>${cents(e.valueCents)}</strong>. Using more of your solar yourself, by running appliances midday or adding a battery, raises that.</p>
+  <p>${escapeHtml(policy.note)}${src}</p>${e.annualFee ? `
+  <p><strong>Solar fee:</strong> the payback above includes a $${policy.feePerKwMonth.toFixed(2)} per kW monthly charge, about ${money(e.annualFee)} a year for this system.</p>` : ''}`
+      : `<p><strong>${escapeHtml(st)} offers net metering:</strong> power you send to the grid is credited at or near the retail price, so every solar kWh is valued at ${cents(prices.priceCents)} here.${policy.note && policy.note !== 'Exported power is credited at or near the retail rate, usually netted monthly or annually.' ? ' ' + escapeHtml(policy.note) : ''}${policy.sourceUrl ? src : ''}</p>`;
   return `<section class="card">
-  <h2>Solar tax credits and incentives in ${buildYear()}</h2>
+  <h2>Net metering, tax credits and incentives in ${buildYear()}</h2>
+  ${exportHtml}
   <p><strong>There is no federal tax credit for buying home solar installed in ${buildYear()}.</strong> The 30% Residential Clean Energy Credit (Section 25D) ended for systems placed in service after December 31, 2025, so the costs and paybacks on this page include no federal credit.</p>
   <p>${escapeHtml(st)} and local utilities may still offer rebates, performance payments, property-tax or sales-tax exemptions. Search the <a href="https://programs.dsireusa.org/system/program?state=${escapeHtml(city.state)}" rel="noopener">DSIRE incentives database for ${escapeHtml(st)}</a> and ask installers which programs they apply for you.</p>
-  <p>How your utility credits power you send back to the grid matters as much as sunshine. These estimates assume each solar kWh is worth the full retail price (classic net metering). Where exports earn less, as under California's net billing, payback runs longer; lower the electricity price in the calculator to model that.</p>
 </section>`;
 }
 
@@ -245,18 +260,18 @@ function buildComparison(city, e, ctx) {
   <ul>
     <li>Each kW of panels here produces about <strong>${num(pv.kwhPerKw)} kWh a year</strong> — ${word(vsState)} the ${escapeHtml(stateName(city.state))} median and ${word(vsUs)} the US median city (${num(usMedianKwh)} kWh).</li>
     ${statePeers.length > 1 ? `<li>Payback ranks <strong>#${rank} of ${statePeers.length}</strong> ${escapeHtml(stateName(city.state))} places we cover.</li>` : ''}
-    <li>Sunshine varies little across a state; electricity price and installed cost drive most of the difference between states.</li>
+    <li>Sunshine varies little across a state; electricity price, installed cost and how utilities credit exported power drive most of the difference between states.</li>
   </ul>
 </section>`;
 }
 
-function buildFaqs(city, e, pv, st) {
+function buildFaqs(city, e, pv, st, policy) {
   const place = `${city.name}, ${city.state}`;
   const v = verdict(e.payback);
   return [
     {
       q: `Is solar worth it in ${place}?`,
-      a: `For a typical home, ${e.payback == null ? 'savings do not repay the system within 25 years at today\'s prices' : `a solar system pays for itself in about ${years(e.payback)} and then keeps saving money`}. Over 25 years the estimated net savings are ${money(e.netLifetime)}. Verdict: ${v.label.toLowerCase()}. Your own payback depends on your roof, your bill and the quotes you get.`
+      a: `For a typical home, ${e.payback == null ? 'savings do not repay the system within 25 years at today\'s prices' : `a solar system pays for itself in about ${years(e.payback)} and then keeps saving money`}. Over 25 years the estimated net ${e.netLifetime >= 0 ? `savings are ${money(e.netLifetime)}` : `loss is ${money(-e.netLifetime)}`}. Verdict: ${v.label.toLowerCase()}. Your own payback depends on your roof, your bill and the quotes you get.`
     },
     {
       q: `How many solar panels do I need in ${place}?`,
@@ -271,8 +286,15 @@ function buildFaqs(city, e, pv, st) {
       a: `${city.name} averages ${pv.sunHours.toFixed(1)} peak sun hours per day, so each kilowatt of panels produces about ${num(pv.kwhPerKw)} kWh a year.`
     },
     {
+      q: `Does ${stateName(city.state)} have net metering?`,
+      a:
+        policy.type === 'net-billing'
+          ? `Not full retail net metering. Under ${policy.label}, exported solar power earns about ${cents(policy.exportCents)} per kWh, versus ${cents(st.priceCents)} for power bought from the grid. Solar you use at home as it's produced still saves the full price.`
+          : `Yes. Power sent back to the grid is credited at or near the retail price (${cents(st.priceCents)} per kWh on average).`
+    },
+    {
       q: `How much does electricity cost in ${stateName(city.state)}?`,
-      a: `Residential electricity in ${stateName(city.state)} averages ${cents(st.priceCents)} per kWh, and a typical home uses ${num(st.monthlyKwh)} kWh a month (EIA).`
+      a: `Residential electricity in ${stateName(city.state)} averages ${cents(st.statePriceCents || st.priceCents)} per kWh, and a typical home uses ${num(st.monthlyKwh)} kWh a month (EIA).`
     }
   ];
 }
@@ -318,11 +340,11 @@ function buildStateTable(rows) {
 
 function buildStatesTable(states) {
   return `<div class="table-wrap"><table class="data">
-  <thead><tr><th>State</th><th>Price</th><th>Cost/W</th><th>Median payback</th><th>Places</th></tr></thead>
+  <thead><tr><th>State</th><th>Price</th><th>Exports earn</th><th>Cost/W</th><th>Median payback</th><th>Places</th></tr></thead>
   <tbody>${states
     .map(
       (s) =>
-        `<tr><td><a href="${escapeHtml(url(statePath(s.abbr)))}">${escapeHtml(s.name)}</a></td><td>${cents(s.priceCents)}</td><td>$${s.costPerWatt.toFixed(2)}</td><td>${yearsShort(s.medianPayback)}</td><td>${num(s.count)}</td></tr>`
+        `<tr><td><a href="${escapeHtml(url(statePath(s.abbr)))}">${escapeHtml(s.name)}</a></td><td>${cents(s.priceCents)}</td><td>${s.policy && s.policy.type === 'net-billing' ? cents(s.policy.exportCents) : 'retail'}</td><td>$${s.costPerWatt.toFixed(2)}</td><td>${yearsShort(s.medianPayback)}</td><td>${num(s.count)}</td></tr>`
     )
     .join('')}</tbody>
 </table></div>`;
@@ -360,7 +382,7 @@ function buildSearchWidget() {
 </div>`;
 }
 
-function buildMethodologyBody(sources, installedCost) {
+function buildMethodologyBody(sources, installedCost, policies) {
   const a = config.assumptions;
   const listed = Object.entries(installedCost.states)
     .map(([k, v]) => `${k} $${v.toFixed(2)}`)
@@ -375,10 +397,18 @@ function buildMethodologyBody(sources, installedCost) {
 <p>Installed cost is the 2025 median price for homeowner-owned residential systems from Berkeley Lab's <a href="${escapeHtml(installedCost.sourceUrl)}" rel="noopener">U.S. Distributed Solar and Storage Data</a>, before incentives. State medians are used where Berkeley Lab reports one (${escapeHtml(listed)}); elsewhere we use the US median of $${installedCost.us.allHostOwned.toFixed(2)}/W. Cash purchases ran cheaper (US median $${installedCost.us.cashPurchase.toFixed(2)}/W) and loan-financed systems higher ($${installedCost.us.loanFinanced.toFixed(2)}/W).</p>
 <p>No federal tax credit is applied: the Section 25D Residential Clean Energy Credit ended for systems placed in service after December 31, 2025.</p>
 <h2>Savings and payback</h2>
-<p>Each solar kWh is valued at the state's average residential electricity price (${escapeHtml(sources.priceSource)}). Savings rise ${(a.priceEscalation * 100).toFixed(1)}% a year with electricity prices, panel output falls ${(a.degradation * 100).toFixed(1)}% a year, and we count ${a.lifetimeYears} years. Payback is the year cumulative savings first cover the upfront cost.</p>
+<p>Each solar kWh is valued at the state's average residential electricity price (${escapeHtml(sources.priceSource)}) where the state offers net metering. Where utilities credit exported power below retail (net billing), we assume ${pct(policies.selfConsumption)} of a no-battery system's output is used at home as it's produced and valued at retail, and the rest earns the export credit below; a flat solar fee, where one applies, is subtracted each year. Savings rise ${(a.priceEscalation * 100).toFixed(1)}% a year with electricity prices, panel output falls ${(a.degradation * 100).toFixed(1)}% a year, and we count ${a.lifetimeYears} years. Payback is the year cumulative savings first cover the upfront cost.</p>
+<h2>States that pay less than retail for exported power</h2>
+<p>As of ${escapeHtml(policies.asOf)}. Rates vary by utility within a state; these are for the largest utilities or a typical value.</p>
+<div class="table-wrap"><table class="data"><thead><tr><th>State</th><th>Program</th><th>Export credit</th><th>Source</th></tr></thead><tbody>${Object.entries(policies.states)
+    .filter(([, p]) => p.type === 'net-billing')
+    .sort((x, y) => stateName(x[0]).localeCompare(stateName(y[0])))
+    .map(([abbr, p]) => `<tr><td>${escapeHtml(stateName(abbr))}</td><td>${escapeHtml(p.label)}</td><td>${p.exportCents != null ? cents(p.exportCents) : `${pct(p.exportShare)} of retail`}${p.feePerKwMonth ? ` + $${p.feePerKwMonth.toFixed(2)}/kW/mo fee` : ''}</td><td><a href="${escapeHtml(p.sourceUrl)}" rel="noopener">link</a></td></tr>`)
+    .join('')}</tbody></table></div>
+<p>All other states offer net metering at or near retail; some (Nevada, Virginia, Oklahoma) pay less only for surplus left over after a month or year of netting, which matters little for a system sized to your use.</p>
 <h2>Limits</h2>
 <ul>
-<li>Assumes full retail credit for exported power. Net billing, time-of-use rates and fixed charges can lengthen payback.</li>
+<li>Export credits change often and differ by utility; time-of-use rates and fixed charges can shift payback either way.</li>
 <li>Your roof's direction, pitch and shade can raise or lower output by 20% or more.</li>
 <li>Financing costs, maintenance, inverter replacement and batteries are not included.</li>
 <li>State averages hide differences between utilities within a state.</li>

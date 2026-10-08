@@ -8,6 +8,7 @@
  *   data/states.json        01-state-data.js
  *   data/pvwatts.json       03-pvwatts.js
  *   data/installed-cost.json  hand-entered from Berkeley Lab
+ *   data/export-policy.json   hand-entered: how each state credits exported power
  *
  * Cities without a PVWatts result are skipped, so a partial cache renders a
  * partial site.
@@ -24,7 +25,7 @@ const path = require('path');
 
 const layout = require('../templates/layout.js');
 const config = require('../config.js');
-const { computeEconomics, costPerWattFor } = require('./model.js');
+const { computeEconomics, costPerWattFor, policyFor } = require('./model.js');
 const { STATE_NAMES, stateName } = require('./states.js');
 
 const basePathLib = require('../../../engine/lib/base-path.js');
@@ -86,15 +87,20 @@ function loadModel() {
   const statesData = readJson('states.json');
   const pvAll = readJson('pvwatts.json');
   const installedCost = readJson('installed-cost.json');
+  const policies = readJson('export-policy.json');
 
   const rows = [];
   for (const city of cities) {
     const pv = pvAll[`${city.stateSlug}/${city.slug}`];
-    const st = statesData.states[city.state];
-    if (!pv || !st) continue;
+    const stateData = statesData.states[city.state];
+    if (!pv || !stateData) continue;
     const cpw = costPerWattFor(city.state, installedCost);
-    const e = computeEconomics({ pv, state: st, costPerWatt: cpw.value, assumptions: config.assumptions });
-    rows.push({ city, pv, st, e, costScope: cpw.scope });
+    const cityPolicy = policies.cities && policies.cities[`${city.stateSlug}/${city.slug}`];
+    // A city utility with its own rate (e.g. LADWP) replaces the state average price.
+    const st = cityPolicy && cityPolicy.priceCents ? { ...stateData, priceCents: cityPolicy.priceCents, priceOwner: cityPolicy.utility, statePriceCents: stateData.priceCents } : stateData;
+    const policy = policyFor(city.state, st.priceCents, policies, `${city.stateSlug}/${city.slug}`);
+    const e = computeEconomics({ pv, state: st, costPerWatt: cpw.value, policy, selfConsumption: policies.selfConsumption, assumptions: config.assumptions });
+    rows.push({ city, pv, st, e, policy, costScope: cpw.scope });
   }
 
   const byState = new Map();
@@ -115,11 +121,12 @@ function loadModel() {
       priceCents: statesData.states[abbr].priceCents,
       monthlyKwh: statesData.states[abbr].monthlyKwh,
       costPerWatt: costPerWattFor(abbr, installedCost).value,
+      policy: policyFor(abbr, statesData.states[abbr].priceCents, policies),
       peers
     });
   }
   const usMedianKwh = median(rows.map((r) => r.pv.kwhPerKw));
-  return { cities, rows, byState, stateStats, usMedianKwh, statesData, installedCost };
+  return { cities, rows, byState, stateStats, usMedianKwh, statesData, installedCost, policies };
 }
 
 // ---------------------------------------------------------------------
@@ -156,7 +163,7 @@ function renderCity(r, m) {
     .sort((a, b) => a.d - b.d)
     .slice(0, 8)
     .map(({ o }) => o);
-  const faqs = layout.buildFaqs(city, e, pv, st);
+  const faqs = layout.buildFaqs(city, e, pv, st, r.policy);
   const place = {
     '@type': 'Place',
     name: `${city.name}, ${city.state}`,
@@ -165,20 +172,23 @@ function renderCity(r, m) {
   };
   const body = `${layout.buildBreadcrumbs(trail)}
 <h1>Solar Panels in ${layout.escapeHtml(city.name)}, ${city.state}: Cost, Payback &amp; Savings</h1>
-${layout.buildAnswerLede(city, e, st)}
-${layout.buildSummary(city, e, pv, r.costScope)}
+${layout.buildAnswerLede(city, e, st, r.policy)}
+${layout.buildSummary(city, e, pv, r.costScope, r.policy)}
 ${layout.buildLeadGen(city)}
 ${layout.buildProductionChart(city, e)}
 ${layout.buildCalculator({
   heading: `Solar payback calculator for ${layout.escapeHtml(city.name)}`,
-  intro: `Pre-filled with ${layout.escapeHtml(city.name)}'s sunshine and ${layout.escapeHtml(layout.possessive(stateName(city.state)))} average electricity price. Enter your own bill and an installer's price per watt to see your payback.`,
+  intro: `Pre-filled with ${layout.escapeHtml(city.name)}'s sunshine and ${layout.escapeHtml(layout.possessive(st.priceOwner || stateName(city.state)))} average electricity price. Enter your own bill and an installer's price per watt to see your payback.`,
   kwhPerKw: pv.kwhPerKw,
   priceCents: st.priceCents,
   monthlyBill: (st.monthlyKwh * st.priceCents) / 100,
-  costPerWatt: e.costPerWatt
+  costPerWatt: e.costPerWatt,
+  exportCents: r.policy.exportCents,
+  feePerKwMonth: r.policy.feePerKwMonth,
+  selfUse: m.policies.selfConsumption
 })}
 ${layout.buildComparison(city, e, { statePeers: ss.peers.map((p) => ({ city: p.city })), stateMedianKwh: ss.medianKwh, usMedianKwh: m.usMedianKwh, pv })}
-${layout.buildIncentives(city)}
+${layout.buildIncentives(city, e, st, r.policy, m.policies.selfConsumption)}
 ${layout.buildFaqSection(faqs)}
 ${layout.buildNearby(nearby.map((o) => ({ city: o.city, e: o.e })))}`;
   return page({
@@ -200,7 +210,7 @@ function renderState(ss) {
   const pathName = layout.statePath(ss.abbr);
   const body = `${layout.buildBreadcrumbs(trail)}
 <h1>Solar Panel Cost &amp; Payback in ${layout.escapeHtml(ss.name)}</h1>
-<p class="lede">Home solar in ${layout.escapeHtml(ss.name)} pays back in a median <strong>${layout.years(ss.medianPayback === 99 ? null : ss.medianPayback)}</strong> across the ${layout.num(ss.count)} places we cover, at an average electricity price of ${layout.cents(ss.priceCents)}/kWh and about $${ss.costPerWatt.toFixed(2)} per watt installed. ${best ? `${layout.escapeHtml(best.city.name)} has the fastest payback (${layout.years(best.e.payback)}).` : ''}</p>
+<p class="lede">Home solar in ${layout.escapeHtml(ss.name)} pays back in a median <strong>${layout.years(ss.medianPayback === 99 ? null : ss.medianPayback)}</strong> across the ${layout.num(ss.count)} places we cover, at an average electricity price of ${layout.cents(ss.priceCents)}/kWh and about $${ss.costPerWatt.toFixed(2)} per watt installed.${ss.policy.type === 'net-billing' ? ` Power sent back to the grid earns only about ${layout.cents(ss.policy.exportCents)}/kWh (${layout.escapeHtml(ss.policy.label)}), which lengthens payback.` : ''} ${best ? `${layout.escapeHtml(best.city.name)} has the fastest payback (${layout.years(best.e.payback)}).` : ''}</p>
 <section class="card">
 <h2>Solar estimates for ${layout.escapeHtml(ss.name)} cities and towns</h2>
 <p>Sorted by fastest payback. Each figure is for a system sized to an average ${layout.escapeHtml(ss.name)} home (${layout.num(ss.monthlyKwh)} kWh/month).</p>
@@ -242,6 +252,8 @@ function calculatorStateOptions(m, selected) {
       priceCents: s.priceCents,
       monthlyBill: (s.monthlyKwh * s.priceCents) / 100,
       costPerWatt: s.costPerWatt,
+      exportCents: s.policy.exportCents,
+      feePerKwMonth: s.policy.feePerKwMonth,
       selected: s.abbr === selected
     }));
 }
@@ -258,13 +270,16 @@ ${layout.buildCalculator({
   priceCents: sel.priceCents,
   monthlyBill: sel.monthlyBill,
   costPerWatt: sel.costPerWatt,
+  exportCents: sel.exportCents,
+  feePerKwMonth: sel.feePerKwMonth,
+  selfUse: m.policies.selfConsumption,
   stateOptions: opts
 })}
 <section class="card">
 <h2>How many solar panels do I need?</h2>
 <p>Divide your yearly electricity use (kWh) by how much one kW of panels produces where you live, then divide by the panel size. Example: 10,800 kWh a year ÷ 1,300 kWh per kW = 8.3 kW, or 21 panels of ${config.assumptions.panelWatts} W. Sunny Southwest cities produce 1,600–1,800 kWh per kW; the cloudy Pacific Northwest about 1,100.</p>
 <h2>What this calculator leaves out</h2>
-<p>It assumes full retail credit for every solar kWh, no federal tax credit (it ended for systems installed after 2025) and no battery. See the <a href="${layout.escapeHtml(layout.url('/methodology/'))}">methodology</a> for every assumption.</p>
+<p>It uses each state's rules for power you send back to the grid — full retail credit under net metering, or a lower export credit where utilities have moved to net billing — and assumes no federal tax credit (it ended for systems installed after 2025) and no battery. See the <a href="${layout.escapeHtml(layout.url('/methodology/'))}">methodology</a> for every assumption.</p>
 </section>`;
   return page({
     title: `Solar Panel Calculator: Cost, Size & Payback (${layout.buildYear()})`,
@@ -339,7 +354,7 @@ function main() {
   writePage('/solar-calculator/', renderCalculatorPage(m));
   writePage('/', renderHome(m));
   fs.writeFileSync(path.join(SITE_DIR, 'search.json'), JSON.stringify(m.rows.map((r) => [r.city.name, r.city.state, layout.url(layout.cityPath(r.city))])), 'utf8');
-  writePage('/methodology/', renderSimple('/methodology/', 'How Our Solar Estimates Are Calculated', 'Data sources and assumptions behind every solar cost, production and payback estimate on this site.', layout.buildMethodologyBody(m.statesData, m.installedCost)));
+  writePage('/methodology/', renderSimple('/methodology/', 'How Our Solar Estimates Are Calculated', 'Data sources and assumptions behind every solar cost, production and payback estimate on this site.', layout.buildMethodologyBody(m.statesData, m.installedCost, m.policies)));
   writePage('/about/', renderSimple('/about/', `About ${config.siteName}`, `What ${config.siteName} is, where its data comes from, and how it is funded.`, layout.buildAboutBody(m.rows.length, config.contactEmail)));
   writePage('/privacy/', renderSimple('/privacy/', 'Privacy Policy', `${config.siteName} privacy policy: hosting, analytics and advertising disclosures.`, layout.buildPrivacyBody(config.contactEmail)));
   writePage('/contact/', renderSimple('/contact/', 'Contact', `Contact ${config.siteName}.`, layout.buildContactBody(config.contactEmail)));

@@ -1,0 +1,167 @@
+{
+  "asOf": "October 2026",
+  "selfConsumption": 0.4,
+  "selfConsumptionNote": "Share of a no-battery system's output used in the home as it is produced (typically 30-50% for a system sized to annual use). Only matters where exports earn less than retail.",
+  "default": {
+    "type": "net-metering",
+    "label": "Net metering",
+    "note": "Exported power is credited at or near the retail rate, usually netted monthly or annually."
+  },
+  "states": {
+    "CA": {
+      "type": "net-billing",
+      "label": "Net Billing Tariff (\"NEM 3.0\")",
+      "exportCents": 7,
+      "note": "Exports earn hourly avoided-cost values (roughly 5-8¢ on average, higher on summer evenings) plus a small adder that drops to 0.9¢ for 2026 PG&E interconnections. Most new California systems add a battery to shift exports into the evening.",
+      "sourceUrl": "https://solar.com/learn/nem-3-0-export-rate-adders/"
+    },
+    "AZ": {
+      "type": "net-billing",
+      "label": "Resource Comparison Proxy export rate",
+      "exportCents": 5.5,
+      "note": "APS and UNS Electric pay about 5.5¢ per exported kWh for applications from September 1, 2026, locked for 10 years. SRP customers (much of metro Phoenix) are on SRP's own solar plans.",
+      "sourceUrl": "https://www.pv-tech.org/acc-cuts-arizona-solar-export-rate/"
+    },
+    "HI": {
+      "type": "net-billing",
+      "label": "Smart Export",
+      "exportCents": 2,
+      "note": "Hawaiian Electric's Smart Export pays for exports only between 4 p.m. and 9 a.m. (about 15¢ on O'ahu) and nothing from 9 a.m. to 4 p.m., when panels export most. Nearly all new Hawaii systems include a battery; without one, exports are worth little.",
+      "sourceUrl": "https://puc.hawaii.gov/?p=3309"
+    },
+    "UT": {
+      "type": "net-billing",
+      "label": "Rocky Mountain Power export credit (Schedule 137)",
+      "exportCents": 4.5,
+      "note": "Rocky Mountain Power credits exports at 4.855¢ (June-September) and 4.033¢ (October-May) from March 2026, updated each March.",
+      "sourceUrl": "https://pscdocs.utah.gov/electric/26docs/26035T03/343975TrfAprvlLtrfromPSC2-23-2026.pdf"
+    },
+    "ID": {
+      "type": "net-billing",
+      "label": "Idaho Power export credit rate",
+      "exportCents": 5,
+      "note": "Idaho Power's export credit varies by season and hour (highest on summer evenings, a few cents at midday); about 5¢ is our blended estimate for a typical rooftop system. Rates reset each June.",
+      "sourceUrl": "https://puc.idaho.gov/Fileroom/PublicFiles/ELEC/IPC/IPCE2515/OrdNotc/20250930Final_Order_No_36785.pdf"
+    },
+    "MI": {
+      "type": "net-billing",
+      "label": "Distributed generation inflow/outflow",
+      "exportShare": 0.5,
+      "note": "DTE and Consumers Energy bill all power drawn from the grid at retail and credit exported power at roughly the power-supply part of the rate, about half of retail.",
+      "sourceUrl": "https://www.michigan.gov/documents/mpsc/DTE_DG_Issue_Brief_05-02-2019_653973_7.pdf"
+    },
+    "IL": {
+      "type": "net-billing",
+      "label": "Supply-only net metering",
+      "exportCents": 8.3,
+      "note": "Systems interconnected from 2025 are credited for exports at the electricity supply rate (ComEd's 2025 average was about 8.3¢), not the full delivered rate. Illinois Shines renewable-energy-credit payments and utility inverter rebates can shorten payback considerably and are not included here.",
+      "sourceUrl": "https://www.citizensutilityboard.org/blog/2024/05/14/cub-qa-whats-happening-to-solar-power-in-illinois-in-2025/"
+    },
+    "IN": {
+      "type": "net-billing",
+      "label": "Excess distributed generation (EDG)",
+      "exportCents": 4,
+      "note": "Indiana utilities credit exports at 1.25 times their average wholesale energy price, about 3.5-4.5¢, updated each year.",
+      "sourceUrl": "https://aesindiana.com/sites/aesvault.com/files/2024-08/Rider-16-EDG-45504-Effective-07-01-24.pdf"
+    },
+    "KY": {
+      "type": "net-billing",
+      "label": "Net metering service (NMS-2)",
+      "exportCents": 7.3,
+      "note": "LG&E and KU credit exports at about 7.1¢ and 7.5¢ per kWh (March 2026 Kentucky PSC orders); other Kentucky utilities set their own rates.",
+      "sourceUrl": "https://psc.ky.gov/order_vault/Orders_2026/202500113_03042026.pdf"
+    },
+    "GA": {
+      "type": "net-billing",
+      "label": "Georgia Power solar buyback",
+      "exportCents": 7.22,
+      "note": "Georgia Power nets instantly and credits exports at its 2026 solar avoided cost (3.22¢) plus a 4¢ renewable adder, 7.22¢ in total, reset each January.",
+      "sourceUrl": "https://help.palmetto.com/en/articles/12922478-georgia-utility-guide"
+    },
+    "AL": {
+      "type": "net-billing",
+      "label": "Avoided-cost purchase plus capacity reservation charge",
+      "exportCents": 3,
+      "feePerKwMonth": 5.41,
+      "note": "Alabama Power buys exports at avoided cost (about 3¢) and charges solar customers a capacity reservation fee of $5.41 per kW per month, upheld by a federal judge in March 2026. Co-op and TVA-area customers have different terms.",
+      "sourceUrl": "https://insideclimatenews.org/news/31032026/alabama-power-solar-fee-ruling/"
+    },
+    "TN": {
+      "type": "net-billing",
+      "label": "TVA Dispersed Power Production",
+      "exportCents": 2.6,
+      "note": "Tennessee has no net metering; TVA buys exports through its Dispersed Power Production program at about 2-3¢ per kWh, and local power companies may add a monthly fee.",
+      "sourceUrl": "https://energyright.com/wp-content/uploads/2026/04/April-DPP-Guidelines-for-Publish.pdf"
+    },
+    "LA": {
+      "type": "net-billing",
+      "label": "Avoided-cost net billing",
+      "exportCents": 2.7,
+      "note": "Louisiana PSC rules since 2020 credit exports at the utility's avoided cost, about a quarter of retail. Entergy New Orleans customers may still have retail net metering.",
+      "sourceUrl": "https://www.surgepv.com/blog/solar-incentives-louisiana"
+    },
+    "AR": {
+      "type": "net-billing",
+      "label": "Net billing (Act 278)",
+      "exportCents": 5,
+      "note": "Systems installed after September 30, 2024 are credited for exports at the utility's avoided cost, typically under half of retail.",
+      "sourceUrl": "https://uaex.uada.edu/environment-nature/energy/solar/net-metering.aspx"
+    },
+    "MS": {
+      "type": "net-billing",
+      "label": "Net renewable generation",
+      "exportCents": 6.1,
+      "note": "Mississippi credits exports at the utility's avoided cost plus a 2.5¢ adder, about 6¢ in total.",
+      "sourceUrl": "https://www.surgepv.com/blog/solar-incentives-mississippi"
+    },
+    "TX": {
+      "type": "net-billing",
+      "label": "Retail provider solar buyback plans",
+      "exportCents": 6,
+      "note": "Texas has no statewide net metering. In competitive areas the export credit depends on your retail plan: most buyback plans pay about 3-9¢, a few match retail. Austin Energy pays a 9.9¢ value-of-solar rate; CPS Energy about 3-4¢.",
+      "sourceUrl": "https://electricityplans.com/texas/compare/solar-buyback-electricity-plans/"
+    },
+    "SD": {
+      "type": "net-billing",
+      "label": "Avoided-cost purchase",
+      "exportCents": 3,
+      "note": "South Dakota utilities mostly don't offer net metering and pay avoided cost for exports, about 2-4¢.",
+      "sourceUrl": "https://www.canarymedia.com/articles/enn/south-dakota-bill-would-bring-transparency-to-solar-compensation"
+    },
+    "ND": {
+      "type": "net-billing",
+      "label": "Avoided-cost net metering",
+      "exportCents": 3,
+      "note": "North Dakota investor-owned utilities credit excess generation at avoided cost, far below retail.",
+      "sourceUrl": "https://pv-magazine-usa.com/2023/02/17/50-states-of-solar-incentives-north-dakota"
+    },
+    "NV": {
+      "type": "net-metering",
+      "label": "Net metering (Tier 4)",
+      "note": "NV Energy credits power you use within the month at retail and pays 75% of retail for surplus beyond that. Northern Nevada (Sierra Pacific) systems approved after October 2025 net every 15 minutes, which lowers savings somewhat.",
+      "sourceUrl": "https://www.energysage.com/net-metering/nv-energy/"
+    },
+    "VA": {
+      "type": "net-metering",
+      "label": "Net metering (Dominion NEM 2.0)",
+      "note": "Dominion's 2026 successor keeps annual netting at retail; only surplus left at the end of the year is paid 5.8¢.",
+      "sourceUrl": "https://pv-magazine-usa.com/2026/05/04/virginia-corporation-commission-approves-dominion-energy-nem-2-0-that-looks-very-similar-to-nem-1-0/"
+    },
+    "OK": {
+      "type": "net-metering",
+      "label": "Net metering",
+      "note": "Oklahoma rules net usage within the billing cycle; utilities buy any surplus at avoided cost, so oversized systems earn little on the extra.",
+      "sourceUrl": "https://oklahoma.gov/occ/divisions/public-utility/energy/electric-utility/netmetering.html"
+    }
+  },
+  "cities": {
+    "ca/los-angeles": {
+      "type": "net-metering",
+      "label": "LADWP net energy metering",
+      "note": "Los Angeles is served by LADWP, a city-owned utility outside the state's Net Billing Tariff; it still credits exported power at or near retail. LADWP's residential rates (about 25-28¢ in 2026) are lower than the state average, so we use 26¢ here.",
+      "sourceUrl": "https://solar.com/learn/is-solar-worth-it-in-los-angeles/",
+      "priceCents": 26,
+      "utility": "LADWP"
+    }
+  }
+}
