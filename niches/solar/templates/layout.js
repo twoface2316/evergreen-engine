@@ -89,7 +89,7 @@ function buildFooter(sources) {
   <p>Solar production: <a href="https://pvwatts.nrel.gov/" rel="noopener">PVWatts®</a> (NREL, now the National Laboratory of the Rockies), NSRDB typical-year weather. Electricity prices and usage: <a href="https://www.eia.gov/electricity/" rel="noopener">U.S. Energy Information Administration</a>${sources && sources.priceAsOf ? ` (prices through ${escapeHtml(sources.priceAsOf)})` : ''}. Installed costs: <a href="https://emp.lbl.gov/tracking-the-sun" rel="noopener">Berkeley Lab</a>, 2025 installs.</p>
   <p>Place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>.</p>
   <p><a href="${escapeHtml(url('/solar-calculator/'))}">Solar calculator</a> &middot; <a href="${escapeHtml(url('/states/'))}">Solar by state</a> &middot; <a href="${escapeHtml(url('/guides/'))}">Guides</a> &middot; <a href="${escapeHtml(url('/methodology/'))}">Methodology</a> &middot; <a href="${escapeHtml(url('/about/'))}">About</a> &middot; <a href="${escapeHtml(url('/privacy/'))}">Privacy</a> &middot; <a href="${escapeHtml(url('/contact/'))}">Contact</a></p>
-  <p>&copy; ${buildYear()} ${escapeHtml(config.siteName)}.</p>
+  ${config.amazonTag ? '<p>As an Amazon Associate we earn from qualifying purchases.</p>' : ''}<p>&copy; ${buildYear()} ${escapeHtml(config.siteName)}.</p>
 </footer>`;
 }
 
@@ -433,7 +433,7 @@ function buildPrivacyBody(contactEmail) {
 <p><strong>Hosting.</strong> Pages are served by Cloudflare, which processes standard request data (IP address, browser type) to deliver and protect the site.</p>
 <p><strong>Analytics.</strong> If enabled, we use privacy-friendly, cookie-free analytics that count page views without identifying you.</p>
 <p><strong>Advertising.</strong> If enabled, Google and its partners may use cookies to serve ads based on your visits to this and other sites. You can opt out of personalized advertising at <a href="https://www.google.com/settings/ads" rel="noopener">Google Ads Settings</a>.</p>
-<p><strong>Referral links.</strong> Some links to installer-quote services are referral links; if you request quotes through them we may be paid a fee.</p>
+<p><strong>Referral links.</strong> Some links to installer-quote services are referral links; if you request quotes through them we may be paid a fee.${config.amazonTag ? ' As an Amazon Associate we earn from qualifying purchases: some product links in our guides go to Amazon, and Amazon may use cookies to attribute purchases.' : ''}</p>
 <p>Contact: <a href="mailto:${escapeHtml(contactEmail)}">${escapeHtml(contactEmail)}</a>.</p>
 </section>`;
 }

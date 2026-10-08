@@ -22,7 +22,7 @@ module.exports = {
   adsensePublisherId: 'pub-8043947909143318',
   // Amazon Associates tracking ID for this site (e.g. 'solarbycity-20');
   // null = guide product mentions render as plain text.
-  amazonTag: null,
+  amazonTag: 'solarbycity-20',
   // Solar quote lead-gen partner. url: affiliate landing URL (may include
   // {zip}/{state} placeholders); null = no "get quotes" boxes.
   leadGen: {
