@@ -1,0 +1,13 @@
+// Cloudflare Workers (static assets) config for solarbycity.com.
+// Workers Builds runs the build command from the repo root, then
+// `npx wrangler deploy --config niches/solar/wrangler.jsonc`.
+// Paths here are relative to this file.
+{
+  "name": "solarbycity",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "../../sites/solar",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
