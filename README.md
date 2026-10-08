@@ -23,7 +23,7 @@ sites/frost/       Generated static site (gitignored; built by CI)
 niches/solar/      Solar niche: cost, payback and savings for 4,807 US places
   scripts/         01-state-data (EIA), 02-cities (from frost list), 03-pvwatts
                    (cached API results), model.js (economics), render.js
-sites/solar/       Generated solar site (gitignored; built by Cloudflare Pages)
+sites/solar/       Generated solar site (gitignored; built by Cloudflare Workers Builds)
 ```
 
 ### Solar niche
@@ -36,7 +36,9 @@ node niches/solar/scripts/test-model.js
 node niches/solar/scripts/render.js full        # sites/solar/
 ```
 
-Hosted on Cloudflare Pages (build command `node niches/solar/scripts/test-model.js && node niches/solar/scripts/render.js full`, output `sites/solar`). The frost GitHub Pages workflow ignores `niches/solar/**` pushes.
+Live at https://solarbycity.com as a Cloudflare Workers static-assets project (Cloudflare has folded Pages into Workers). Workers Builds settings: build command `node niches/solar/scripts/test-model.js && node niches/solar/scripts/render.js full`, deploy command `npx wrangler deploy --config niches/solar/wrangler.jsonc`, build watch paths `niches/solar/*` and `engine/*`. The frost GitHub Pages workflow ignores `niches/solar/**` pushes.
+
+Guides: `niches/<niche>/content/guides/*.html` with JSON front matter, rendered by `engine/lib/guides.js`; each niche's `scripts/guides.js` supplies its data placeholders.
 
 ### Home (water + radon) niche
 
@@ -51,7 +53,7 @@ node niches/home/scripts/test-model.js
 node niches/home/scripts/render.js        # sites/home/ (`sample` for 8 cities)
 ```
 
-Cloudflare Pages: build command `node niches/home/scripts/test-model.js && node niches/home/scripts/render.js`, output `sites/home`.
+Cloudflare Workers (same setup as solar, for waterbycity.com): build command `node niches/home/scripts/test-model.js && node niches/home/scripts/render.js`, deploy command `npx wrangler deploy --config niches/home/wrangler.jsonc`, build watch paths `niches/home/*` and `engine/*`.
 
 ## Build
 

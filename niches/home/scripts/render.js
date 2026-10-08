@@ -26,6 +26,20 @@ const layout = require('../templates/layout.js');
 const config = require('../config.js');
 const { recentHealth, toGpg } = require('./model.js');
 const { stateName } = require('./states.js');
+const guidesLib = require('./guides.js');
+
+// Long-form guides (content/guides/), loaded once per build.
+const GUIDES = guidesLib.loadGuides();
+
+/** Guides most relevant to a place: lead and violations first where the record has problems, hardness where water is hard. */
+function cityGuides(d) {
+  const order = [];
+  if (d.primary && (d.primary.violations.healthBased || (d.primary.lead && d.primary.lead.mgL > 0.005))) order.push('lead-in-tap-water', 'how-to-read-water-quality-report');
+  if (d.hardness && toGpg(d.hardness.mgL) >= 7) order.push('hard-water-softener-guide');
+  order.push('choose-a-water-filter', 'how-to-read-water-quality-report', 'lead-in-tap-water', 'radon-testing-guide', 'pfas-in-tap-water', 'hard-water-softener-guide');
+  const bySlug = new Map(GUIDES.map((g) => [g.slug, g]));
+  return [...new Set(order)].map((s) => bySlug.get(s)).filter(Boolean);
+}
 
 const basePathLib = require('../../../engine/lib/base-path.js');
 const { buildPageShell, setShellDefaults } = require('../../../engine/lib/page-shell.js');
@@ -156,7 +170,8 @@ ${layout.buildHardness(city, d)}
 ${softener}
 ${layout.buildRadon(city, d)}
 ${layout.buildFaqSection(faqs)}
-${layout.buildNearby(nearby)}`;
+${layout.buildNearby(nearby)}
+${guidesLib.buildGuideLinks(cityGuides(d))}`;
   return page({
     title: layout.buildCityTitle(city),
     description: layout.buildCityDescription(city, d),
@@ -239,7 +254,8 @@ function renderHome(m) {
 <section class="card"><h2>Largest cities</h2>${layout.buildCityTable(largest)}</section>
 <section class="card"><h2>Hardest water among big cities</h2>${layout.buildCityTable(hardest)}</section>
 <section class="card"><h2>Browse by state</h2><ul class="states-az">${states.map((a) => `<li><a href="${layout.escapeHtml(layout.url(layout.statePath(a)))}">${layout.escapeHtml(stateName(a))}</a></li>`).join('')}</ul>
-<p><a href="${layout.escapeHtml(layout.url('/water-softener-calculator/'))}">Water softener calculator →</a></p></section>`;
+<p><a href="${layout.escapeHtml(layout.url('/water-softener-calculator/'))}">Water softener calculator →</a></p></section>
+${guidesLib.buildGuideLinks(GUIDES, 8)}`;
   return page({
     title: `${config.siteName}: Tap Water Quality, Hardness & Radon by City`,
     description: `Is your tap water safe? EPA violations, lead results, hardness and radon zones for ${layout.num(m.rows.length)} US cities and towns.`,
@@ -279,6 +295,7 @@ function main() {
   writePage('/states/', renderStatesIndex(m));
   writePage('/water-softener-calculator/', renderSoftenerPage());
   writePage('/', renderHome(m));
+  const guideUrls = guidesLib.renderGuides({ guides: GUIDES, m, page, writePage, siteUrl: SITE_URL });
   fs.writeFileSync(path.join(SITE_DIR, 'search.json'), JSON.stringify(m.rows.map((r) => [r.city.name, r.city.state, layout.url(layout.cityPath(r.city))])), 'utf8');
   const simple = (p, t, dsc, b) => writePage(p, page({ title: t, description: dsc, pathName: p, bodyHtml: b }));
   simple('/methodology/', 'Where Our Water and Radon Data Comes From', 'Sources and methods behind the utility, violation, lead, hardness and radon data on this site.', layout.buildMethodologyBody(m.sources));
@@ -291,7 +308,7 @@ function main() {
     'utf8'
   );
 
-  const urls = ['/', '/states/', '/water-softener-calculator/', '/methodology/', '/about/', ...stateAbbrs.map(layout.statePath), ...cityRows.map((r) => layout.cityPath(r.city))];
+  const urls = ['/', '/states/', '/water-softener-calculator/', '/methodology/', '/about/', ...guideUrls, ...stateAbbrs.map(layout.statePath), ...cityRows.map((r) => layout.cityPath(r.city))];
   fs.writeFileSync(path.join(SITE_DIR, 'sitemap.xml'), buildSitemapXml(urls, SITE_URL), 'utf8');
   fs.writeFileSync(path.join(SITE_DIR, 'robots.txt'), buildRobotsTxt(SITE_URL), 'utf8');
   if (config.adsensePublisherId) fs.writeFileSync(path.join(SITE_DIR, 'ads.txt'), `google.com, ${config.adsensePublisherId}, DIRECT, f08c47fec0942fa0\n`, 'utf8');

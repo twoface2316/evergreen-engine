@@ -1,0 +1,13 @@
+// Cloudflare Workers (static assets) config for waterbycity.com.
+// Workers Builds runs the build command from the repo root, then
+// `npx wrangler deploy --config niches/home/wrangler.jsonc`.
+// Paths here are relative to this file.
+{
+  "name": "waterbycity",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "../../sites/home",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}

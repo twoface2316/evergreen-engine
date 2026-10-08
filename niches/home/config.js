@@ -15,7 +15,7 @@ module.exports = {
 
   // ---- Monetization / analytics: paste IDs here, push, done. ----
   goatcounterCode: null,
-  adsensePublisherId: null,
+  adsensePublisherId: 'pub-8043947909143318',
   // Amazon Associates tracking ID for this site (e.g. 'waterbycity-20');
   // null = product boxes render without links.
   amazonTag: null,

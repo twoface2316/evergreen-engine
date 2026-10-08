@@ -165,3 +165,10 @@ table.data td:first-child { white-space: nowrap; }
 .products ul { margin: 0; padding-left: 1.2rem; }
 .calc-out { grid-template-columns: repeat(1, minmax(0, 1fr)); }
 @media (min-width: 640px) { #soft .calc-out { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Guides */
+.prose h2 { margin-top: 1.4rem; }
+.prose h2:first-child { margin-top: 0; }
+.prose ul, .prose ol { padding-left: 1.3rem; }
+.prose li { margin: 0.25rem 0; }
+.prose .table-wrap { margin: 0.8rem 0; }

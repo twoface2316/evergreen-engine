@@ -1,58 +1,28 @@
 'use strict';
 
 /**
- * niches/solar/scripts/guides.js — long-form solar guides.
+ * niches/solar/scripts/guides.js — solar guides on top of engine/lib/guides.js.
  *
- * Each guide is a hand-written HTML fragment in niches/solar/content/guides/
- * ({slug}.html) opening with a JSON front-matter comment:
- *
- *   <!--{"title": "...", "h1": "...", "description": "...", "summary": "...",
- *        "order": 1, "published": "2026-10-08", "related": ["slug", ...]}-->
- *
- * Bodies use {{placeholders}} filled from the same model as the city pages,
- * so the guides can't drift from the site's numbers:
+ * Guides live in niches/solar/content/guides/ (format: engine/lib/guides.js).
+ * Solar placeholders, all filled from the same model as the city pages:
  *   {{cityCount}} {{usMedianPayback}} {{usMedianKwh}} {{netBillingCount}}
  *   {{fastestStates}} {{slowestStates}} {{netBillingTable}}
  *   {{costUs}} {{costCash}} {{costLoan}} {{selfUse}}
- *   {{statePayback:CA}} {{statePrice:CA}} {{stateExport:CA}} {{stateValue:CA}}
  *   {{plugInKwh}} {{plugInValue20}}  800 W plug-in kit at the US median output
+ *   {{statePayback:CA}} {{statePrice:CA}} {{stateExport:CA}} {{stateValue:CA}}
  *   {{cityPayback:ca/los-angeles}}
- *   {{amazon:search terms|link text}}  sponsored Amazon link, or plain text when no tag
- *   {{leadgen}}                         installer-quote box, or nothing when no partner
- * Root-relative hrefs ("/solar-calculator/") are base-path prefixed.
- *
- * renderGuides() writes /guides/ and /guides/{slug}/ and returns their URLs.
+ *   {{leadgen}}  installer-quote box, or nothing when no partner is configured
  */
 
-const fs = require('fs');
 const path = require('path');
 
 const layout = require('../templates/layout.js');
 const config = require('../config.js');
-const basePathLib = require('../../../engine/lib/base-path.js');
-const { stateName } = require('./states.js');
+const engineGuides = require('../../../engine/lib/guides.js');
 const { solarValueCents } = require('./model.js');
 
 const CONTENT_DIR = path.join(__dirname, '..', 'content', 'guides');
 const { escapeHtml } = layout;
-
-function loadGuides() {
-  if (!fs.existsSync(CONTENT_DIR)) return [];
-  return fs
-    .readdirSync(CONTENT_DIR)
-    .filter((f) => f.endsWith('.html'))
-    .map((file) => {
-      const raw = fs.readFileSync(path.join(CONTENT_DIR, file), 'utf8');
-      const m = /^\s*<!--\s*(\{[\s\S]*?\})\s*-->/.exec(raw);
-      if (!m) throw new Error(`${file}: missing JSON front-matter comment`);
-      const meta = JSON.parse(m[1]);
-      for (const key of ['title', 'h1', 'description', 'summary', 'published']) {
-        if (!meta[key]) throw new Error(`${file}: front matter is missing "${key}"`);
-      }
-      return { ...meta, slug: file.replace(/\.html$/, ''), body: raw.slice(m[0].length).trim() };
-    })
-    .sort((a, b) => (a.order || 99) - (b.order || 99));
-}
 
 const median = (arr) => {
   const s = arr.filter((v) => v != null).sort((a, b) => a - b);
@@ -91,23 +61,13 @@ function buildValues(m) {
   };
 }
 
-function amazonLink(query, text) {
-  if (!config.amazonTag) return escapeHtml(text);
-  const href = `https://www.amazon.com/s?k=${encodeURIComponent(query)}&tag=${encodeURIComponent(config.amazonTag)}`;
-  return `<a href="${escapeHtml(href)}" rel="sponsored noopener">${escapeHtml(text)}</a>`;
-}
-
-function fillBody(guide, values, m) {
-  let usedAmazon = false;
-  const body = guide.body.replace(/\{\{([a-zA-Z0-9]+)(?::([^}|]+))?(?:\|([^}]+))?\}\}/g, (all, key, arg, text) => {
-    if (key === 'amazon') {
-      usedAmazon = true;
-      return amazonLink(arg, text || arg);
-    }
+/** Parameterized solar placeholders; undefined lets the engine fall through to `values`. */
+function resolver(m, slug) {
+  return (key, arg) => {
     if (key === 'leadgen') return layout.buildLeadGen({ name: 'your area', state: '' });
     if (key === 'statePayback' || key === 'statePrice' || key === 'stateExport' || key === 'stateValue') {
       const s = m.stateStats.get(arg);
-      if (!s) throw new Error(`${guide.slug}: unknown state ${arg}`);
+      if (!s) throw new Error(`${slug}: unknown state ${arg}`);
       if (key === 'statePayback') return layout.years(s.medianPayback === 99 ? null : s.medianPayback);
       if (key === 'statePrice') return layout.cents(s.priceCents);
       if (key === 'stateValue') return layout.cents(solarValueCents(s.priceCents, s.policy.exportCents, m.policies.selfConsumption));
@@ -115,84 +75,41 @@ function fillBody(guide, values, m) {
     }
     if (key === 'cityPayback') {
       const r = m.rows.find((x) => `${x.city.stateSlug}/${x.city.slug}` === arg);
-      if (!r) throw new Error(`${guide.slug}: unknown city ${arg}`);
+      if (!r) throw new Error(`${slug}: unknown city ${arg}`);
       return layout.years(r.e.payback);
     }
-    if (!(key in values)) throw new Error(`${guide.slug}: unknown placeholder {{${key}}}`);
-    return values[key];
-  });
-  // Base-path prefix root-relative links.
-  const html = body.replace(/href="(\/[^"]*)"/g, (all, p) => `href="${escapeHtml(basePathLib.href(p))}"`);
-  return { html, usedAmazon };
+    return undefined;
+  };
 }
 
-function formatDate(iso) {
-  const d = new Date(`${iso}T12:00:00Z`);
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+function loadGuides() {
+  return engineGuides.loadGuides(CONTENT_DIR);
 }
 
-/** Small "Solar guides" card for city/state pages: up to `n` guides. */
+/** "Solar guides" card for city/home pages. */
 function buildGuideLinks(guides, n = 4) {
-  if (!guides.length) return '';
-  return `<section class="card"><h2>Solar guides</h2><ul>${guides
-    .slice(0, n)
-    .map((g) => `<li><a href="${escapeHtml(layout.url(`/guides/${g.slug}/`))}">${escapeHtml(g.h1)}</a></li>`)
-    .join('')}</ul></section>`;
+  return engineGuides.buildGuideLinks(guides, { heading: 'Solar guides', n });
 }
 
-/**
- * renderGuides({ guides, m, page, writePage, siteUrl }) -> list of URLs written.
- * `page` and `writePage` are render.js's page shell and file writer.
- */
+/** renderGuides({ guides, m, page, writePage, siteUrl }) -> URLs written. */
 function renderGuides({ guides, m, page, writePage, siteUrl }) {
-  if (!guides.length) return [];
   const values = buildValues(m);
-  const bySlug = new Map(guides.map((g) => [g.slug, g]));
-  const urls = [];
-
-  for (const g of guides) {
-    const { html, usedAmazon } = fillBody(g, values, m);
-    const trail = [
-      { label: 'Home', href: '/' },
-      { label: 'Guides', href: '/guides/' },
-      { label: g.h1, href: `/guides/${g.slug}/` }
-    ];
-    const related = (g.related || []).map((s) => bySlug.get(s)).filter(Boolean);
-    const disclosure = usedAmazon && config.amazonTag ? '<p class="muted">This guide contains affiliate links. As an Amazon Associate we earn from qualifying purchases.</p>' : '';
-    const body = `${layout.buildBreadcrumbs(trail)}
-<article class="guide">
-<h1>${escapeHtml(g.h1)}</h1>
-<p class="muted">Published ${formatDate(g.published)}${g.updated ? ` · Updated ${formatDate(g.updated)}` : ''}</p>
-${disclosure}
-<p class="lede">${escapeHtml(g.summary)}</p>
-<section class="card prose">
-${html}
-</section>
-</article>
-${related.length ? `<section class="card"><h2>Related guides</h2><ul>${related.map((r) => `<li><a href="${escapeHtml(layout.url(`/guides/${r.slug}/`))}">${escapeHtml(r.h1)}</a></li>`).join('')}</ul></section>` : ''}`;
-    const ld = {
-      '@context': 'https://schema.org',
-      '@graph': [
-        { '@type': 'Article', headline: g.h1, description: g.description, datePublished: g.published, dateModified: g.updated || g.published, mainEntityOfPage: `${siteUrl}/guides/${g.slug}/`, publisher: { '@type': 'Organization', name: config.siteName } },
-        { '@type': 'BreadcrumbList', itemListElement: trail.map((t, i) => ({ '@type': 'ListItem', position: i + 1, name: t.label, item: `${siteUrl}${t.href}` })) }
-      ]
-    };
-    writePage(
-      `/guides/${g.slug}/`,
-      page({ title: g.title, description: g.description, pathName: `/guides/${g.slug}/`, bodyHtml: body, jsonLdHtml: `<script type="application/ld+json">${JSON.stringify(ld)}</script>` })
-    );
-    urls.push(`/guides/${g.slug}/`);
-  }
-
-  const index = `${layout.buildBreadcrumbs([{ label: 'Home', href: '/' }, { label: 'Guides', href: '/guides/' }])}
-<h1>Solar Guides</h1>
-<p class="lede">Plain-language answers to the questions that decide whether home solar pays off in ${layout.buildYear()}, using the same data as our city estimates.</p>
-${guides
-  .map((g) => `<section class="card"><h2><a href="${escapeHtml(layout.url(`/guides/${g.slug}/`))}">${escapeHtml(g.h1)}</a></h2><p>${escapeHtml(g.summary)}</p></section>`)
-  .join('\n')}`;
-  writePage('/guides/', page({ title: `Solar Guides (${layout.buildYear()}): Costs, Net Metering, Batteries & Quotes`, description: 'Guides to home solar in 2026: whether it pays without the tax credit, net metering vs net billing, batteries, leases and reading quotes.', pathName: '/guides/', bodyHtml: index }));
-  urls.push('/guides/');
-  return urls;
+  return engineGuides.renderGuidePages({
+    guides,
+    fill: (g) => engineGuides.fillGuideBody(g, { values, resolve: resolver(m, g.slug), amazonTag: config.amazonTag }),
+    page,
+    writePage,
+    breadcrumbs: layout.buildBreadcrumbs,
+    siteUrl,
+    siteName: config.siteName,
+    amazonTag: config.amazonTag,
+    index: {
+      title: `Solar Guides (${layout.buildYear()}): Costs, Net Metering, Batteries & Quotes`,
+      description: 'Guides to home solar in 2026: whether it pays without the tax credit, net metering vs net billing, batteries, leases and reading quotes.',
+      h1: 'Solar Guides',
+      lede: `Plain-language answers to the questions that decide whether home solar pays off in ${layout.buildYear()}, using the same data as our city estimates.`
+    }
+  });
 }
 
-module.exports = { loadGuides, renderGuides, buildGuideLinks, stateName };
+module.exports = { loadGuides, renderGuides, buildGuideLinks };

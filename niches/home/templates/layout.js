@@ -61,7 +61,7 @@ const CATEGORY = {
 function buildSiteHeader() {
   return `<header class="site-header"><div class="wrap">
   <a class="brand" href="${e(url('/'))}"><span class="drop" aria-hidden="true"></span>${e(config.siteName)}</a>
-  <nav><a href="${e(url('/water-softener-calculator/'))}">Softener calculator</a><a href="${e(url('/states/'))}">States</a><a href="${e(url('/methodology/'))}">Methodology</a></nav>
+  <nav><a href="${e(url('/water-softener-calculator/'))}">Softener calculator</a><a href="${e(url('/states/'))}">States</a><a href="${e(url('/guides/'))}">Guides</a></nav>
 </div></header>`;
 }
 
@@ -76,7 +76,7 @@ function buildFooter(sources) {
   <div class="disclaimer">Reference information from public records — <strong>not a guarantee that any tap is safe or unsafe</strong>. Water quality changes, and your home's own pipes matter. Your utility's annual Consumer Confidence Report and a certified lab test are the authoritative sources.</div>
   <p>Utilities, violations and lead/copper results: <a href="https://echo.epa.gov/" rel="noopener">EPA Safe Drinking Water Information System via ECHO</a>${sources && sources.waterAsOf ? ` (data through ${e(sources.waterAsOf)})` : ''}. Radon zones: <a href="https://www.epa.gov/radon/epa-map-radon-zones-0" rel="noopener">EPA Map of Radon Zones</a>.</p>
   <p>Water hardness: <a href="https://www.tapwaterdata.com/water-hardness" rel="noopener">TapWaterData US Water Hardness Dataset</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>. Place data: <a href="https://www.geonames.org/" rel="noopener">GeoNames.org</a>, CC BY 4.0.</p>
-  ${disclosure}<p><a href="${e(url('/water-softener-calculator/'))}">Water softener calculator</a> &middot; <a href="${e(url('/states/'))}">Water by state</a> &middot; <a href="${e(url('/methodology/'))}">Methodology</a> &middot; <a href="${e(url('/about/'))}">About</a> &middot; <a href="${e(url('/privacy/'))}">Privacy</a> &middot; <a href="${e(url('/contact/'))}">Contact</a></p>
+  ${disclosure}<p><a href="${e(url('/water-softener-calculator/'))}">Water softener calculator</a> &middot; <a href="${e(url('/states/'))}">Water by state</a> &middot; <a href="${e(url('/guides/'))}">Guides</a> &middot; <a href="${e(url('/methodology/'))}">Methodology</a> &middot; <a href="${e(url('/about/'))}">About</a> &middot; <a href="${e(url('/privacy/'))}">Privacy</a> &middot; <a href="${e(url('/contact/'))}">Contact</a></p>
   <p>&copy; ${buildYear()} ${e(config.siteName)}.</p>
 </footer>`;
 }

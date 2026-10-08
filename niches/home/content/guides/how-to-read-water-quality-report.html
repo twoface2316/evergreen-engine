@@ -1,0 +1,46 @@
+<!--{
+  "order": 1,
+  "published": "2026-10-08",
+  "title": "Is My Tap Water Safe? How to Read Your Water Report",
+  "h1": "Is My Tap Water Safe? How to Read Your Water Quality Report",
+  "description": "How to read your utility's annual water quality report and EPA violation records, what health-based vs monitoring violations mean, and when to test your own tap.",
+  "summary": "Every community water utility publishes an annual report on what was found in its water, and every violation it commits goes into an EPA database. Here is how to read both, and what they can't tell you about your own tap.",
+  "related": ["lead-in-tap-water", "choose-a-water-filter", "pfas-in-tap-water"]
+}-->
+<h2>Two records worth checking</h2>
+<p>If your water comes from a community utility, two public records describe it:</p>
+<ul>
+<li><strong>The Consumer Confidence Report (CCR)</strong>, also called the annual water quality report. Utilities must deliver it to customers by July 1 each year, covering the previous calendar year's testing. It's usually linked on your water bill or the utility's website.</li>
+<li><strong>EPA's Safe Drinking Water Information System (SDWIS)</strong>, which records every violation a utility is cited for. That's the data behind the violation history on each city page on this site.</li>
+</ul>
+<p>The report rules are changing: starting with reports issued in 2027, utilities serving more than 10,000 people must send them twice a year, and every report has to open with a plain-language summary of violations and any results above action levels.</p>
+
+<h2>Reading the results table</h2>
+<p>The core of every report is a table of contaminants the utility detected. For each one you'll see:</p>
+<ul>
+<li><strong>MCL (maximum contaminant level):</strong> the legal limit.</li>
+<li><strong>MCLG (goal):</strong> the level below which there's no known health risk. For some contaminants, including lead and arsenic, the goal is zero even though the legal limit isn't.</li>
+<li><strong>Level detected and range:</strong> usually an average and the lowest and highest results. A single high sample doesn't necessarily mean a violation; many limits are based on running annual averages.</li>
+<li><strong>Likely source:</strong> such as "byproduct of drinking water disinfection" or "erosion of natural deposits."</li>
+</ul>
+<p>Lead and copper are reported differently, as a 90th-percentile result from homes the utility sampled, against an "action level" rather than an MCL. See our <a href="/guides/lead-in-tap-water/">lead guide</a> for what that number means.</p>
+
+<h2>Health-based vs monitoring violations</h2>
+<p>Not every violation means the water was unsafe. EPA flags violations as health-based when the water exceeded a legal limit (an MCL or disinfectant limit) or the utility failed to carry out required treatment. The rest are monitoring and reporting violations: a test that wasn't taken on time, a report not filed, a notice not sent.</p>
+<p>Monitoring violations matter — if a required test wasn't done, nobody can say the water was fine that month — but they're a different kind of problem from a contaminant above its limit.</p>
+<p>Across the {{utilityCount}} US places we matched to a utility, <strong>{{cleanShare}} have had no health-based violations since {{windowYear}}</strong>. Among utilities that did, the most common health-based problems were:</p>
+{{topContaminants}}
+<p>Disinfection byproducts — trihalomethanes and haloacetic acids — form when chlorine reacts with natural organic matter in the water. They're regulated for long-term exposure, so a violation usually reflects a running average over a year, not an acute hazard.</p>
+
+<h2>Acute vs long-term risks</h2>
+<p>Some violations require the utility to warn you within 24 hours: E. coli detections, nitrate above the limit (dangerous to infants), or a treatment failure that could let pathogens through. Those come with boil-water or do-not-drink notices. Most other limits are set for a lifetime of exposure, so an exceedance is a reason to follow up and perhaps filter, not to panic.</p>
+
+<h2>What the records can't tell you</h2>
+<ul>
+<li><strong>Your own plumbing.</strong> Lead mostly enters water from service lines, solder and fixtures between the main and your faucet. Only a test of your tap shows that.</li>
+<li><strong>Unregulated contaminants.</strong> Many substances, including most PFAS until recently, aren't covered by limits, so a clean violation record says nothing about them. See our <a href="/guides/pfas-in-tap-water/">PFAS guide</a>.</li>
+<li><strong>Private wells.</strong> About one in eight Americans drinks well water, which no federal rule covers. Well owners should test at least once a year for bacteria and nitrate, and periodically for arsenic and other local concerns. A {{amazon:well water test kit|well water test kit}} is a starting point; a state-certified lab gives definitive results.</li>
+</ul>
+
+<h2>Check your city</h2>
+<p>Look up your city from the <a href="/">home page</a> to see its main utility, every violation since {{windowYear}}, its latest lead and copper results, hardness and radon zone. EPA data on this site runs through {{waterAsOf}}. If something concerns you, the fix is usually a filter certified for that specific contaminant — our <a href="/guides/choose-a-water-filter/">filter guide</a> explains which certification to look for.</p>
