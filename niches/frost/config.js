@@ -39,12 +39,14 @@ module.exports = {
     seedShop: null
   },
 
-  // Printable planting calendars (scripts/printables.js). url: store page
-  // (Lemon Squeezy/Gumroad/Etsy); null = no "Get the printable" box on city
-  // pages. urls: optional per-bucket overrides keyed by bucket id ('apr-15').
+  // Printable planting calendars (scripts/printables.js), sold on Etsy.
+  // url: shop or default listing URL; null = "Coming soon" instead of buy
+  // buttons. urls: per-version listing URLs keyed by bucket id ('apr-15').
+  // `node niches/frost/scripts/printables.js etsy` writes the listing kit.
   printables: {
     url: null,
     urls: {},
-    price: '$5'
+    price: '$5',
+    store: 'Etsy'
   }
 };

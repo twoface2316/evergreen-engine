@@ -17,6 +17,8 @@
  *   node niches/frost/scripts/printables.js html      -> HTML only (no Chrome needed)
  *   node niches/frost/scripts/printables.js previews  -> watermarked sample-page
  *     images for the product page, written to niches/frost/static/ (committed)
+ *   node niches/frost/scripts/printables.js etsy      -> Etsy listing kit per version in
+ *     out/etsy/{id}/: title, description, tags, listing images, and the PDF
  * Set CHROME_PATH if Chrome/Edge isn't in a standard install location.
  */
 
@@ -113,7 +115,7 @@ function renderProductPage(cities, siteDir, siteUrl) {
   const faqs = [
     { q: 'Which version do I need?', a: 'Pick the version whose date range contains your average last spring frost. Look up your ZIP code on FrostCal: your city page shows your average last frost and links to the matching calendar.' },
     { q: 'What format is it?', a: 'A 5-page PDF sized for US Letter paper in landscape orientation, designed to print in color or black and white on a home printer.' },
-    { q: 'How do I get it?', a: 'Checkout is handled by Lemon Squeezy. The PDF download link is emailed to you right after purchase.' },
+    { q: 'How do I get it?', a: cfg.store === 'Etsy' ? 'Checkout is on Etsy. Right after purchase, Etsy gives you an instant download link, and the PDF stays available under Purchases in your Etsy account.' : 'The PDF download link is delivered right after purchase.' },
     { q: 'Where do the dates come from?', a: 'Frost dates come from NOAA 1991–2020 climate normals, the same data behind every FrostCal city page. Planting windows follow university extension timing guidelines, counted from each version\'s frost dates.' },
     { q: 'Is there a version for frost-free areas?', a: 'Not yet. Places whose last frost is usually before February (most of Florida, the Gulf Coast, and the low desert) plant around heat and rain rather than frost, so a frost-based calendar would be misleading there.' }
   ];
@@ -436,9 +438,150 @@ function runPreviews(crops) {
   }
 }
 
+// ---------------------------------------------------------------------
+// Etsy listing kit (`printables.js etsy`)
+// ---------------------------------------------------------------------
+
+/** "6–7": USDA zone numbers holding at least 20% of a version's cities. */
+function zoneRange(cities, bucketId) {
+  const zones = require('../data/zones.json');
+  const counts = new Map();
+  let total = 0;
+  for (const c of cities) {
+    const b = bucketFor(c);
+    const z = b && b.id === bucketId ? zones[`${c.stateSlug}/${c.slug}`] : null;
+    if (!z) continue;
+    const n = parseInt(z, 10);
+    counts.set(n, (counts.get(n) || 0) + 1);
+    total++;
+  }
+  const nums = [...counts.entries()].filter(([, k]) => k / total >= 0.2).map(([n]) => n).sort((a, b) => a - b);
+  return { nums, label: nums.length > 1 ? `${nums[0]}–${nums[nums.length - 1]}` : String(nums[0]) };
+}
+
+function etsyTitle(stats, zones) {
+  const t = `Zone ${zones.label} Planting Calendar Printable | Last Frost ${stats.label} | Vegetable Garden Planner, Seed Starting Chart PDF`;
+  if (t.length > 140) throw new Error(`Etsy title over 140 chars: ${t}`);
+  return t;
+}
+
+function etsyTags(zones) {
+  const tags = [
+    ...zones.nums.map((n) => `zone ${n} garden`),
+    ...zones.nums.map((n) => `zone ${n} planting`),
+    'planting calendar', 'garden planner', 'seed starting chart', 'vegetable garden', 'frost date calendar',
+    'planting schedule', 'when to plant', 'garden log', 'gardening printable', 'garden journal', 'homestead planner'
+  ];
+  const out = [...new Set(tags)].slice(0, 13);
+  for (const t of out) if (t.length > 20) throw new Error(`Etsy tag over 20 chars: ${t}`);
+  return out;
+}
+
+function etsyDescription(stats, zones) {
+  const others = BUCKETS.map((b) => b.label).filter((l) => l !== stats.label).join(', ');
+  return `A printable planting calendar timed to your frost dates — for gardens whose average last spring frost falls ${stats.label} (most often USDA hardiness zones ${zones.label}).
+
+Includes, for example: ${stats.examples.slice(0, 6).join('; ')}.
+
+WHAT'S INSIDE (5 pages)
+• Your key dates: average last spring frost (${formatDateShort(stats.last.p50)}) and first fall frost (${formatDateShort(stats.first.p50)}), a safer planting date, growing-season length, and quick dates for 10 popular crops
+• Vegetable planting chart: when to start seeds indoors, sow outdoors, transplant, and plant for fall — 29 vegetables on one 12-month timeline, with frost-risk windows shaded
+• Herb & flower chart: the same for 13 herbs and flowers
+• Month-by-month task list: every month's sowing and planting jobs on one page
+• Garden log: record what you planted and when frost actually came
+
+HOW TO PICK YOUR VERSION
+Choose the version whose date range contains your average last spring frost. Your local extension office or any frost-date lookup by ZIP code will tell you yours. Zones are a guide only: frost dates vary within a zone, and this calendar is built from frost dates, not zones.
+Other versions in the shop: last frost ${others}.
+
+WHERE THE DATES COME FROM
+Frost dates are medians of NOAA 1991–2020 U.S. Climate Normals for the cities in this frost-date range. Planting windows follow university extension timing, counted from those frost dates. Always check your local forecast before planting tender crops.
+
+FORMAT
+• 5-page PDF, US Letter (8.5 x 11 in), landscape
+• Prints in color or black and white on a home printer
+• Instant digital download — no physical item will be shipped
+
+For personal use. Please don't resell or share the file.`;
+}
+
+/** 4:3 listing cover: title, version, zones, and the vegetable chart page. */
+function etsyCoverHtml(stats, zones, chartPng) {
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+* { box-sizing: border-box; } body { margin: 0; width: 1000px; height: 750px; overflow: hidden; font-family: "Segoe UI", Helvetica, Arial, sans-serif; background: #f3f1ea; color: #1f2a1f; }
+.wrap { display: flex; height: 100%; padding: 46px 44px; gap: 36px; align-items: center; }
+.text { flex: 0 0 380px; }
+.kicker { font-size: 18px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #8a6a37; }
+h1 { font-size: 58px; line-height: 1.02; margin: 12px 0 18px; color: #2c5c34; }
+.chip { display: inline-block; background: #3f7d4a; color: #fff; font-size: 24px; font-weight: 700; padding: 10px 18px; border-radius: 10px; margin-bottom: 10px; }
+.zone { font-size: 24px; font-weight: 600; margin: 4px 0 22px; }
+ul { list-style: none; padding: 0; margin: 0; font-size: 20px; line-height: 1.7; }
+li::before { content: '✓  '; color: #3f7d4a; font-weight: 700; }
+.shot { flex: 1; background: #fff; border-radius: 10px; box-shadow: 0 10px 30px rgba(31,42,31,.18); padding: 10px; transform: rotate(1.5deg); }
+.shot img { width: 100%; display: block; border-radius: 4px; }
+</style></head><body><div class="wrap">
+<div class="text">
+<div class="kicker">Printable PDF</div>
+<h1>Planting Calendar</h1>
+<div class="chip">Last frost ${escapeHtml(stats.label)}</div>
+<div class="zone">USDA zones ${escapeHtml(zones.label)}</div>
+<ul><li>42 vegetables, herbs &amp; flowers</li><li>12-month seed-starting chart</li><li>Monthly task list + garden log</li><li>Instant download, 5 pages</li></ul>
+</div>
+<div class="shot"><img src="file:///${chartPng.replace(/\\/g, '/')}"></div>
+</div></body></html>`;
+}
+
+function runEtsy(crops) {
+  const chrome = findChrome();
+  if (!chrome) throw new Error('Chrome/Edge not found; set CHROME_PATH.');
+  const root = path.join(__dirname, '..', '..', '..', 'out');
+  const pdfDir = path.join(root, 'printables', 'pdf');
+  const cities = loadCities();
+  const shot = (htmlPath, png, w, h) =>
+    execFileSync(chrome, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=2', `--window-size=${w},${h}`, `--screenshot=${png}`, `file:///${htmlPath.replace(/\\/g, '/')}`], { stdio: 'ignore' });
+  const summary = [];
+
+  for (const stats of bucketStats(cities)) {
+    const dir = path.join(root, 'etsy', stats.id);
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.mkdirSync(dir, { recursive: true });
+    const zones = zoneRange(cities, stats.id);
+
+    // Watermarked page images for this version (2112 x 1632).
+    const pages = [[1, '02-key-dates'], [2, '03-vegetable-chart'], [4, '04-monthly-tasks']];
+    for (const [n, name] of pages) {
+      const htmlPath = path.join(dir, `_page-${n}.html`);
+      fs.writeFileSync(htmlPath, renderBucketHtml(stats, crops, n), 'utf8');
+      shot(htmlPath, path.join(dir, `${name}.png`), 1056, 816);
+    }
+    // Cover (2000 x 1500), built around the vegetable chart image.
+    const coverHtml = path.join(dir, '_cover.html');
+    fs.writeFileSync(coverHtml, etsyCoverHtml(stats, zones, path.join(dir, '03-vegetable-chart.png')), 'utf8');
+    shot(coverHtml, path.join(dir, '01-cover.png'), 1000, 750);
+    for (const f of fs.readdirSync(dir)) if (f.startsWith('_')) fs.rmSync(path.join(dir, f));
+
+    const pdfName = `frostcal-planting-calendar-last-frost-${stats.id}.pdf`;
+    const pdfSrc = path.join(pdfDir, pdfName);
+    if (!fs.existsSync(pdfSrc)) throw new Error(`missing ${pdfSrc}; run "printables.js" first`);
+    fs.copyFileSync(pdfSrc, path.join(dir, pdfName));
+
+    const title = etsyTitle(stats, zones);
+    const tags = etsyTags(zones);
+    fs.writeFileSync(
+      path.join(dir, 'listing.txt'),
+      `TITLE (${title.length}/140)\n${title}\n\nPRICE\n${(cfg.price || '$5').replace('$', '')}\n\nTAGS (${tags.length}/13, comma-separated)\n${tags.join(', ')}\n\nDESCRIPTION\n${etsyDescription(stats, zones)}\n\nPHOTOS (upload in order)\n01-cover.png, 02-key-dates.png, 03-vegetable-chart.png, 04-monthly-tasks.png\n\nDIGITAL FILE\n${pdfName}\n`,
+      'utf8'
+    );
+    summary.push(`${stats.id}\t${stats.label}\tzones ${zones.label}\t${stats.count} cities\t${title.length} chars`);
+    console.log(`etsy: ${stats.label.padEnd(12)} zones ${zones.label.padEnd(4)} -> out/etsy/${stats.id}/`);
+  }
+  fs.writeFileSync(path.join(root, 'etsy', 'versions.tsv'), `id\tlast frost\tzones\tcities\ttitle length\n${summary.join('\n')}\n`, 'utf8');
+}
+
 function run(mode) {
   const crops = require('../data/crops.json');
   if (mode === 'previews') return runPreviews(crops);
+  if (mode === 'etsy') return runEtsy(crops);
   const outDir = path.join(__dirname, '..', '..', '..', 'out', 'printables');
   const htmlDir = path.join(outDir, 'html');
   const pdfDir = path.join(outDir, 'pdf');
