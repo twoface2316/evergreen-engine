@@ -40,12 +40,23 @@ module.exports = {
   },
 
   // Printable planting calendars (scripts/printables.js), sold on Etsy.
-  // url: shop or default listing URL; null = "Coming soon" instead of buy
-  // buttons. urls: per-version listing URLs keyed by bucket id ('apr-15').
+  // url: shop URL, also the fallback when a version has no listing. null =
+  // "Coming soon" instead of buy buttons. urls: per-version listing URLs
+  // keyed by bucket id ('apr-15').
   // `node niches/frost/scripts/printables.js etsy` writes the listing kit.
   printables: {
-    url: null,
-    urls: {},
+    url: 'https://www.etsy.com/shop/JuneAshbyPrintables',
+    urls: {
+      'feb-01': 'https://www.etsy.com/listing/4594847282/zone-9-planting-calendar-printable-o',
+      'feb-15': 'https://www.etsy.com/listing/4594828271/zone-9-planting-calendar-printable-o',
+      'mar-01': 'https://www.etsy.com/listing/4594828189/zone-89-planting-calendar-printable-o',
+      'mar-15': 'https://www.etsy.com/listing/4594828119/zone-78-planting-calendar-printable-o',
+      'apr-01': 'https://www.etsy.com/listing/4594847094/zone-7-planting-calendar-printable-o',
+      'apr-15': 'https://www.etsy.com/listing/4594847034/zone-67-planting-calendar-printable-o',
+      'may-01': 'https://www.etsy.com/listing/4594828161/zone-56-planting-calendar-printable-o',
+      'may-15': 'https://www.etsy.com/listing/4594828325/zone-45-planting-calendar-printable-o',
+      'jun-01': 'https://www.etsy.com/listing/4594847420/zone-56-planting-calendar-printable-o'
+    },
     price: '$5',
     store: 'Etsy'
   }
